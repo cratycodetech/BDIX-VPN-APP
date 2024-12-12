@@ -63,10 +63,9 @@ class NormalHomeConnect extends StatelessWidget {
 
             // Server List Card (Replaced)
             _buildServerListCard(context),
-        
+
             const SizedBox(height: 20),
 
-            
             // Remaining Time Card
             _buildRemainingTimeCard(context),
 
@@ -79,7 +78,6 @@ class NormalHomeConnect extends StatelessWidget {
       ),
     );
   }
-
 
   /// Builds the user information section with logo and "Go Pro" option.
   Widget _buildUserInfo(BuildContext context) {
@@ -304,14 +302,13 @@ class NormalHomeConnect extends StatelessWidget {
               children: [
                 // Server Icon Placeholder
                 Container(
-                  width: 18,
-                  height: 18,
-                  decoration: BoxDecoration(
-                    color: Color.fromARGB(255, 244, 244, 245),
-                    shape: BoxShape.rectangle,
-                  ),
-                  child: Image.asset("assets/images/french_flag.png") 
-                ),
+                    width: 18,
+                    height: 18,
+                    decoration: BoxDecoration(
+                      color: Color.fromARGB(255, 244, 244, 245),
+                      shape: BoxShape.rectangle,
+                    ),
+                    child: Image.asset("assets/images/french_flag.png")),
                 const SizedBox(width: 12),
                 // Server Name
                 Text(
