@@ -85,6 +85,13 @@ flutter:
     - assets/images/done_icon.svg
     - assets/images/world_image.svg
     - assets/images/desktop_image.svg
+    - assets/images/logo.png
+    - assets/images/normal_map.png
+    - assets/images/location_icon.svg
+    - assets/images/globe_icon.svg
+    - assets/images/custom_down_arrow.svg
+    - assets/images/custom_up_arrow.svg
+    - assets/images/tap_button.svg
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware

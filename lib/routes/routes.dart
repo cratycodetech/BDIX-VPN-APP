@@ -1,5 +1,6 @@
 import 'package:bdix_vpn/presentation/connected_screen/premium_connected_screen.dart';
 import 'package:bdix_vpn/presentation/connection_screen/connection_failed_screen.dart';
+import 'package:bdix_vpn/presentation/home_screen/guest_home_screen.dart';
 import 'package:bdix_vpn/presentation/profile_screen/guest_profile_screen.dart';
 import 'package:bdix_vpn/presentation/profile_screen/normal_login_profile_screen.dart';
 import 'package:bdix_vpn/presentation/setting_screen/guest_setting_screen.dart';
@@ -20,7 +21,6 @@ import '../presentation/sign_up_screen/signUp_otp_screen.dart';
 import '../presentation/sign_up_screen/signUp_passWord_screen.dart';
 import '../presentation/sign_up_screen/sign_up_screen1.dart';
 import '../presentation/welcome_screen/welcome_screen.dart';
-import '../presentation/home_screen/normal_home_connect_screen.dart';
 
 class AppRoutes {
   static const splash = '/splash';
@@ -45,6 +45,7 @@ class AppRoutes {
   static const premiumSubscriptionScreen = '/premiumSubscriptionScreen';
   static const connectionFailedScreen = '/connectionFailedScreen';
   static const premiumConnectedScreen = '/premiumConnectedScreen';
+  static const guestHomeScreen = '/guestHomeScreen';
 
   static final routes = [
     GetPage(name: splash, page: () => OneTimeSplashScreen()),
@@ -56,7 +57,6 @@ class AppRoutes {
     GetPage(name: signUpOTP, page: () => SignUp3()),
     GetPage(name: signUpPass, page: () => SignUp6()),
     GetPage(name: guestHome, page: () => GuestHome()),
-    GetPage(name: normalConnectHome, page: () => NormalHomeConnect()),
     GetPage(name: connectionReportScreen, page: () => const ConnectionReportScreen()),
     GetPage(name: guestServerScreen, page: () => const GuestServerScreen()),
     GetPage(name: normalServerScreen, page: () => const NormalServerScreen()),
@@ -69,5 +69,7 @@ class AppRoutes {
     GetPage(name: premiumSubscriptionScreen, page: () => const PremiumSubscriptionScreen()),
     GetPage(name: connectionFailedScreen, page: () => const ConnectionFailedScreen()),
     GetPage(name: premiumConnectedScreen, page: () => const PremiumConnectedScreen()),
+    GetPage(name: guestHomeScreen, page: () => const GuestHomeScreen()),
+
   ];
 }
