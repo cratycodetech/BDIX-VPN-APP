@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart'; // Import GetX
-import 'presentation/one_time_splash_screen/one_time_splash_screen.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart'; // Import ScreenUtil
 import 'routes/routes.dart'; // Import your routes file
 
 void main() {
@@ -12,15 +12,30 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GetMaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
-      ),
-      initialRoute: AppRoutes.guestHomeScreen, // Set the initial route
-      getPages: AppRoutes.routes,    // Define all routes
+    return ScreenUtilInit(
+      designSize: const Size(390, 844), // Design width and height for responsiveness
+      minTextAdapt: true,
+      splitScreenMode: true,
+      builder: (context, child) {
+        return GetMaterialApp(
+          debugShowCheckedModeBanner: false,
+          title: 'Flutter Demo',
+          theme: ThemeData(
+            colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+            useMaterial3: true,
+          ),
+          initialRoute: AppRoutes.guestHomeScreen,
+          getPages: AppRoutes.routes,
+          unknownRoute: GetPage(
+            name: '/not-found',
+            page: () => const Scaffold(
+              body: Center(
+                child: Text('Page not found'),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }
