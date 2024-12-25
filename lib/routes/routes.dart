@@ -9,8 +9,11 @@ import '../presentation/sign_up_screen/signUp_passWord_screen.dart';
 import '../presentation/sign_up_screen/sign_up_screen1.dart';
 import '../presentation/welcome_screen/welcome_screen.dart';
 import '../presentation/home_screen/normal_home_connect_screen.dart';
+import 'package:openvpn_flutter/openvpn_flutter.dart';
+import '../controllers/openvpn_controller.dart';
 
 class AppRoutes {
+  // Route names
   static const splash = '/splash';
   static const welcome = '/welcome';
   static const signIn = '/signIn';
@@ -31,7 +34,21 @@ class AppRoutes {
     GetPage(name: signUp1, page: () => SignUpApp()),
     GetPage(name: signUpOTP, page: () => SignUp3()),
     GetPage(name: signUpPass, page: () => SignUp6()),
-    GetPage(name: guestHome, page: () => GuestHome()),
-    GetPage(name: normalConnectHome, page: () => NormalHomeConnect()),
+    GetPage(name: guestHome, page: () => const GuestHome()),
+    GetPage(
+      name: normalConnectHome,
+      page: () {
+        final engine = Get.find<OpenVPNController>().engine;
+        if (engine == null) {
+          // Fallback behavior if engine is not initialized
+          Get.snackbar(
+            'Error',
+            'VPN engine not initialized. Redirecting to GuestHome.',
+          );
+          return const GuestHome();
+        }
+        return GuestHomeScreen(engine: engine);
+      },
+    ),
   ];
 }
