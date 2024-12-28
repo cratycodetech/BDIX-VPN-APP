@@ -39,6 +39,16 @@ dependencies:
   flutter_svg: ^2.0.10+1
   get: ^4.6.6
   flutter_screenutil: ^5.9.3
+  google_mobile_ads: ^5.2.0
+  flutter_dotenv: ^5.2.1
+  shared_preferences: ^2.3.3
+  http: ^1.2.2
+  flutter_riverpod: ^2.0.0
+  device_info_plus: ^11.2.0
+  openvpn_flutter: ^1.3.2
+  flutter_speedtest: ^0.2.0
+
+
 
 
 dev_dependencies:
@@ -94,6 +104,8 @@ flutter:
     - assets/images/custom_down_arrow.svg
     - assets/images/custom_up_arrow.svg
     - assets/images/map.png
+    - .env
+    - assets/VPNFile/client1.ovpn
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware

@@ -1,10 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get/get.dart'; // Import GetX
 import 'package:flutter_screenutil/flutter_screenutil.dart'; // Import ScreenUtil
+import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'controllers/openvpn_controller.dart';
 import 'routes/routes.dart'; // Import your routes file
 
-void main() {
-  runApp(const MyApp());
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: ".env");
+  MobileAds.instance.initialize();
+  final openVpnController = Get.put(OpenVPNController());
+  await openVpnController.init();
+  runApp(const ProviderScope( // Wrap your app with ProviderScope
+    child: MyApp(),
+  ),);
 }
 
 class MyApp extends StatelessWidget {
@@ -24,7 +35,7 @@ class MyApp extends StatelessWidget {
             colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
             useMaterial3: true,
           ),
-          initialRoute: AppRoutes.guestHomeScreen,
+          initialRoute: AppRoutes.splash,
           getPages: AppRoutes.routes,
           unknownRoute: GetPage(
             name: '/not-found',

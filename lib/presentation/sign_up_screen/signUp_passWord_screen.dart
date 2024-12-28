@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../routes/routes.dart';
+import '../../service/auth_service.dart';
+import '../../utils/validation_utils.dart';
+
 
 void main() {
   runApp(const signUpPaass());
@@ -20,8 +23,45 @@ class signUpPaass extends StatelessWidget {
   }
 }
 
-class SignUp6 extends StatelessWidget {
+class SignUp6 extends StatefulWidget {
   const SignUp6({super.key});
+
+  @override
+  State<SignUp6> createState() => _SignUp6State();
+}
+
+class _SignUp6State extends State<SignUp6> {
+  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _confirmPasswordController = TextEditingController();
+  final AuthService _authService = AuthService();
+  final String email = Get.arguments['email'] ?? '';
+
+  String? _passwordError;
+  String? _confirmPasswordError;
+
+  void _validateAndCreateAccount() async {
+    final password = _passwordController.text;
+    final confirmPassword = _confirmPasswordController.text;
+
+    setState(() {
+      _passwordError = ValidationUtils.validatePassword(password);
+      _confirmPasswordError = ValidationUtils.validateConfirmPassword(password, confirmPassword);
+    });
+
+    if (_passwordError == null && _confirmPasswordError == null) {
+      try {
+        await _authService.signUp(email: email, password: password);
+        Get.toNamed(AppRoutes.guestHome);
+      } catch (e) {
+        Get.snackbar(
+          'Error',
+          e.toString(),
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,23 +72,20 @@ class SignUp6 extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             const SizedBox(height: 50),
-
             // App Logo
             Center(
               child: Container(
                 width: 150,
                 height: 150,
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   image: DecorationImage(
-                    image: AssetImage('assets/images/logo.png'), // Add your app logo path
+                    image: AssetImage('assets/images/logo.png'),
                     fit: BoxFit.contain,
                   ),
                 ),
               ),
             ),
-
             const SizedBox(height: 40),
-
             // Password Fields
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -56,6 +93,7 @@ class SignUp6 extends StatelessWidget {
                 children: [
                   // Password Field
                   TextField(
+                    controller: _passwordController,
                     obscureText: true,
                     decoration: InputDecoration(
                       hintText: 'Password',
@@ -67,13 +105,13 @@ class SignUp6 extends StatelessWidget {
                         borderRadius: BorderRadius.circular(4),
                         borderSide: const BorderSide(color: Color(0xFFE2DBDA)),
                       ),
+                      errorText: _passwordError,
                     ),
                   ),
-
                   const SizedBox(height: 14),
-
                   // Confirm Password Field
                   TextField(
+                    controller: _confirmPasswordController,
                     obscureText: true,
                     decoration: InputDecoration(
                       hintText: 'Confirm Password',
@@ -85,14 +123,13 @@ class SignUp6 extends StatelessWidget {
                         borderRadius: BorderRadius.circular(4),
                         borderSide: const BorderSide(color: Color(0xFFE2DBDA)),
                       ),
+                      errorText: _confirmPasswordError,
                     ),
                   ),
                 ],
               ),
             ),
-
             const SizedBox(height: 40),
-
             // Create Account Button
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -100,10 +137,7 @@ class SignUp6 extends StatelessWidget {
                 width: double.infinity,
                 height: 56,
                 child: ElevatedButton(
-                  onPressed: () {
-                    // Add your account creation logic
-                    Get.toNamed(AppRoutes.guestHome);
-                  },
+                  onPressed: _validateAndCreateAccount,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF393E7A),
                     shape: RoundedRectangleBorder(
@@ -121,9 +155,7 @@ class SignUp6 extends StatelessWidget {
                 ),
               ),
             ),
-
             const SizedBox(height: 20),
-
             // Sign In Text
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -139,7 +171,8 @@ class SignUp6 extends StatelessWidget {
                   ),
                   GestureDetector(
                     onTap: () {
-                      // Add navigation to Sign In screen
+                      Get.toNamed(
+                        AppRoutes.signIn);
                     },
                     child: const Text(
                       ' Sign in',
@@ -153,16 +186,14 @@ class SignUp6 extends StatelessWidget {
                 ],
               ),
             ),
-
             const SizedBox(height: 40),
-
             // Privacy Policy Text
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16),
               child: Text.rich(
                 TextSpan(
                   children: [
-                    const TextSpan(
+                    TextSpan(
                       text: 'By creating an account, you agree to our ',
                       style: TextStyle(
                         color: Color(0xFF8A8A8A),
@@ -177,9 +208,9 @@ class SignUp6 extends StatelessWidget {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const TextSpan(
+                    TextSpan(
                       text:
-                          ', which outlines how we handle your personal data and browsing information to ensure secure and private access to the VPN service.',
+                      ', which outlines how we handle your personal data and browsing information to ensure secure and private access to the VPN service.',
                       style: TextStyle(
                         color: Color(0xFF8A8A8A),
                         fontSize: 10,
@@ -190,7 +221,6 @@ class SignUp6 extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
             ),
-
             const SizedBox(height: 40),
           ],
         ),

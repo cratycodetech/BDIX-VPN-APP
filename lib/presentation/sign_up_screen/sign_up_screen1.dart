@@ -1,26 +1,23 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../routes/routes.dart';
+import '../../service/auth_service.dart';
+import '../../utils/validation_utils.dart';
 
-void main() {
-  runApp(const SignUpApp());
-}
-
-class SignUpApp extends StatelessWidget {
-  const SignUpApp({Key? key}) : super(key: key);
+class SignUpScreen extends StatefulWidget {
+  const SignUpScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: SignUpScreen(),
-    );
-  }
+  State<SignUpScreen> createState() => _SignUpScreenState();
 }
 
-class SignUpScreen extends StatelessWidget {
+class _SignUpScreenState extends State<SignUpScreen> {
+
+
   final TextEditingController emailController = TextEditingController();
+  final AuthService _authService = AuthService();
 
   @override
   Widget build(BuildContext context) {
@@ -61,7 +58,8 @@ class SignUpScreen extends StatelessWidget {
                     fontSize: 14,
                     color: Color(0xFFC7BFBE),
                   ),
-                  prefixIcon: const Icon(Icons.email_outlined, color: Color(0xFFC7BFBE)),
+                  prefixIcon: const Icon(Icons.email_outlined,
+                      color: Color(0xFFC7BFBE)),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(4),
                     borderSide: const BorderSide(
@@ -81,6 +79,7 @@ class SignUpScreen extends StatelessWidget {
                     vertical: 12,
                   ),
                 ),
+                validator: (value) => ValidationUtils.validateEmail(value),
               ),
               const SizedBox(height: 35),
               // Next Button
@@ -94,10 +93,61 @@ class SignUpScreen extends StatelessWidget {
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
-                  onPressed: () {
-                    // Navigate to the next step or page
-                    Get.toNamed(AppRoutes.signUpOTP);
+                  onPressed: () async {
+                    final emailError = ValidationUtils.validateEmail(emailController.text);
+
+                    if (emailError == null) {
+                      try {
+                        showDialog(
+                          context: context,
+                          barrierDismissible: false,
+                          builder: (context) => const Center(child: CircularProgressIndicator()),
+                        );
+
+                        await _authService.sendOTP(email: emailController.text);
+
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              'OTP sent successfully!',
+                              style: TextStyle(color: Colors.white),
+                            ),
+                            backgroundColor: Colors.green,
+                            duration: Duration(seconds: 2),
+                          ),
+                        );
+                        Navigator.of(context).pop();
+                        Get.toNamed(
+                          AppRoutes.signUpOTP,
+                          arguments: {'email': emailController.text},
+                        );
+                      } catch (e) {
+                        Navigator.of(context).pop();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              "Email already registered, try with different email",
+                              style: TextStyle(color: Colors.white),
+                            ),
+                            backgroundColor: Colors.red,
+                            duration: Duration(seconds: 2),
+                          ),
+                        );
+                      }
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            emailError,
+                            style: const TextStyle(color: Colors.white),
+                          ),
+                          backgroundColor: Colors.red,
+                          duration: const Duration(seconds: 2),
+                        ),
+                      );
+                    }
                   },
+
                   child: const Text(
                     'Next',
                     style: TextStyle(
@@ -131,6 +181,11 @@ class SignUpScreen extends StatelessWidget {
                           fontWeight: FontWeight.w700,
                           color: Color(0xFF393E7A),
                         ),
+                        recognizer: TapGestureRecognizer()
+                          ..onTap = () {
+                            Get.toNamed(
+                                AppRoutes.signIn);
+                          },
                       ),
                     ],
                   ),
@@ -139,10 +194,10 @@ class SignUpScreen extends StatelessWidget {
               ),
               const SizedBox(height: 20),
               // Privacy Policy Footer
-              Text.rich(
+              const Text.rich(
                 TextSpan(
                   children: [
-                    const TextSpan(
+                    TextSpan(
                       text: 'By creating an account, you agree to our ',
                       style: TextStyle(
                         fontSize: 10,
@@ -151,15 +206,15 @@ class SignUpScreen extends StatelessWidget {
                     ),
                     TextSpan(
                       text: 'Privacy Policy',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.w500,
                         color: Color(0xFFEC8304),
                       ),
                     ),
-                    const TextSpan(
+                    TextSpan(
                       text:
-                          ', which outlines how we handle your personal data and browsing information to ensure secure and private access to the VPN service.',
+                      ', which outlines how we handle your personal data and browsing information to ensure secure and private access to the VPN service.',
                       style: TextStyle(
                         fontSize: 10,
                         color: Color(0xFF8A8A8A),
@@ -176,3 +231,4 @@ class SignUpScreen extends StatelessWidget {
     );
   }
 }
+

@@ -4,6 +4,8 @@ import 'dart:async';
 import 'package:get/get.dart';
 
 import '../../routes/routes.dart';
+import '../../service/auth_service.dart';
+import '../../utils/validation_utils.dart';
 
 void main() {
   runApp(const FigmaToCodeApp());
@@ -33,11 +35,18 @@ class _SignUp3State extends State<SignUp3> {
   int _countdown = 300; // 5 minutes countdown in seconds
   late Timer _timer;
 
-  final List<TextEditingController> _controllers = List.generate(4, (index) => TextEditingController());
+  final List<TextEditingController> _controllers =
+      List.generate(6, (index) => TextEditingController());
+  final String email = Get.arguments['email'] ?? '';
+  final AuthService _authService = AuthService();
+
+
+
 
   @override
   void initState() {
     super.initState();
+    print(email);
     _startTimer();
   }
 
@@ -130,7 +139,7 @@ class _SignUp3State extends State<SignUp3> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: List.generate(
-                  4,
+                  6,
                   (index) => SizedBox(
                     width: 57,
                     height: 60,
@@ -153,7 +162,7 @@ class _SignUp3State extends State<SignUp3> {
                         fontWeight: FontWeight.bold,
                       ),
                       onChanged: (value) {
-                        if (value.isNotEmpty && index < 3) {
+                        if (value.isNotEmpty && index < 5) {
                           FocusScope.of(context).nextFocus();
                         } else if (value.isEmpty && index > 0) {
                           FocusScope.of(context).previousFocus();
@@ -173,11 +182,48 @@ class _SignUp3State extends State<SignUp3> {
                 width: double.infinity,
                 height: 56,
                 child: ElevatedButton(
-                  onPressed: () {
+                  onPressed: () async {
                     String pin = _controllers.map((e) => e.text).join();
-                    // Handle "Next" functionality
-                    print("Entered PIN: $pin");
-                    Get.toNamed(AppRoutes.signUpPass);
+
+                    String? otpError = ValidationUtils.validateOtp(
+                      _controllers
+                          .map((controller) => controller.text)
+                          .toList(),
+                    );
+
+                    if (otpError != null) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(otpError)),
+                      );
+                      return;
+                    }
+
+                    try {
+                      showDialog(
+                        context: context,
+                        barrierDismissible: false,
+                        builder: (context) => const Center(child: CircularProgressIndicator()),
+                      );
+
+                      await _authService.verifyOtp(email: email, otp: pin);
+
+                      Navigator.of(context).pop();
+
+                      // Navigate to the next screen on success
+                      Get.toNamed(AppRoutes.signUpPass, arguments: {'email': email});
+                    } catch (error) {
+                      Navigator.of(context).pop();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            "Invalid OTP,try with correct one",
+                            style: TextStyle(color: Colors.white),
+                          ),
+                          backgroundColor: Colors.red,
+                          duration: Duration(seconds: 2),
+                        ),
+                      );
+                    }
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF393E7A), // Button color

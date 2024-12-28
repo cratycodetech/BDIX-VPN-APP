@@ -1,18 +1,38 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-
+import 'package:get/get.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:openvpn_flutter/openvpn_flutter.dart';
+import '../../advertisment/reworded_ad.dart';
+import '../../controllers/openvpn_controller.dart';
+import '../../routes/routes.dart';
+import '../../service/user_service.dart';
+import '../../utils/speed_utils.dart';
 import '../../widgets/bottomNavigationBar_widget.dart';
+import '../../widgets/rewarded_ad_dialog.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../providers/timer_provider.dart';
 
-class GuestHomeScreen extends StatefulWidget {
-  const GuestHomeScreen({super.key});
+class GuestHomeScreen extends ConsumerStatefulWidget {
+  final OpenVPN engine;
+
+  const GuestHomeScreen({super.key, required this.engine});
 
   @override
-  State<GuestHomeScreen> createState() => _GuestHomeScreenState();
+  ConsumerState<GuestHomeScreen> createState() => _GuestHomeScreenState();
 }
 
-class _GuestHomeScreenState extends State<GuestHomeScreen> {
+class _GuestHomeScreenState extends ConsumerState<GuestHomeScreen> {
+  final OpenVPNController vpnController = Get.find<OpenVPNController>();
+  late RewardedAdManager _rewardedAdManager;
   late int _currentIndex = 0;
+  late Timer _dialogTimer;
+  Duration get remainingTime => Duration(seconds: ref.watch(timerProvider));
+  final Speed _speed = Speed();
+  final UserService _userService = UserService();
+  bool isPremium = false;
 
   void _onItemTapped(int index) {
     setState(() {
@@ -20,8 +40,129 @@ class _GuestHomeScreenState extends State<GuestHomeScreen> {
     });
   }
 
+  Future<void> _disconnectVPN() async {
+    try {
+      print('Disconnecting VPN...');
+
+      // Access the OpenVPNController instance
+      if (!Get.isRegistered<OpenVPNController>()) {
+        throw Exception('OpenVPNController is not registered.');
+      }
+
+      final OpenVPNController vpnController = Get.find<OpenVPNController>();
+
+      // Ensure the engine is initialized
+      if (vpnController.engine == null) {
+        throw Exception('OpenVPN engine is not initialized.');
+      }
+
+      // Disconnect the VPN using OpenVPNController
+      vpnController.engine.disconnect();
+      vpnController.isConnected.value = false;
+      vpnController.vpnStage.value = "Disconnected";
+
+      print('VPN Disconnected.');
+
+      // Navigate back to GuestHome using Get
+      if (mounted) {
+        Get.offNamed(AppRoutes
+            .guestHome); // Use Get.offNamed to replace the current screen
+      }
+    } catch (error) {
+      print('Error disconnecting VPN: $error');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to disconnect VPN: $error')),
+      );
+    }
+  }
+
+  void _loadRewardedAd() {
+    _rewardedAdManager.loadRewardedAd(
+      onAdLoaded: () {
+        print('Rewarded Ad Loaded');
+      },
+      onAdFailed: () {
+        print('Rewarded Ad Failed to Load');
+      },
+    );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    MobileAds.instance.initialize();
+    _rewardedAdManager = RewardedAdManager();
+    _loadRewardedAd();
+    ref.read(timerProvider.notifier).startTimer();
+    _startTrafficStatsUpdate();
+    _loadUserType();
+  }
+
+  @override
+  void dispose() {
+    _dialogTimer.cancel();
+    super.dispose();
+  }
+
+  Future<void> _loadUserType() async {
+    bool userType = await _userService.getUserType();
+    setState(() {
+      isPremium = userType;
+    });
+  }
+
+  void _startTrafficStatsUpdate() {
+    Timer.periodic(const Duration(seconds: 1), (timer) {
+      _speed.updateTrafficStats();
+      setState(() {}); // Trigger UI update after updating traffic stats
+    });
+  }
+
+  void _showAdDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return RewardedAdDialog(
+          onWatchAd: _showRewardedAd, // Pass the callback to add time
+        );
+      },
+    );
+  }
+
+  void _showRewardedAd() {
+    _rewardedAdManager.showRewardedAd(
+      context: context,
+      onRewardEarned: _addExtraTime, // Callback for reward
+    );
+  }
+
+  void _addExtraTime() {
+    setState(() {
+      ref.read(timerProvider.notifier).addExtraTime(300); // Add 5 minutes
+    });
+  }
+
+  String _formatDuration(Duration duration) {
+    String twoDigits(int n) => n.toString().padLeft(2, '0');
+    String hours = twoDigits(duration.inHours);
+    String minutes = twoDigits(duration.inMinutes.remainder(60));
+    String seconds = twoDigits(duration.inSeconds.remainder(60));
+    return "$hours:$minutes:$seconds";
+  }
+
   @override
   Widget build(BuildContext context) {
+    ref.listen<int>(timerProvider, (previous, next) {
+      setState(() {});
+    });
+
+    ref.listen<int>(timerProvider, (previous, next) {
+      if (ref.watch(timerProvider.notifier).shouldShowAd) {
+        _showAdDialog();
+        ref.read(timerProvider.notifier).resetAdFlag();
+      }
+    });
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: SingleChildScrollView(
@@ -142,18 +283,12 @@ class _GuestHomeScreenState extends State<GuestHomeScreen> {
                               ),
                               SizedBox(width: 8.w),
                               Text(
-                                '28.5',
+                                _speed.downloadSpeedKB,
                                 style: TextStyle(
                                   fontSize: 16.sp,
                                   color: Colors.black,
                                   fontWeight: FontWeight.bold,
                                 ),
-                              ),
-                              SizedBox(width: 4.w),
-                              Text(
-                                'KB/S',
-                                style: TextStyle(
-                                    fontSize: 12.sp, color: Colors.black),
                               ),
                             ],
                           ),
@@ -166,18 +301,12 @@ class _GuestHomeScreenState extends State<GuestHomeScreen> {
                               ),
                               SizedBox(width: 8.w),
                               Text(
-                                '28.5',
+                                _speed.uploadSpeedKB,
                                 style: TextStyle(
                                   fontSize: 16.sp,
                                   color: Colors.black,
                                   fontWeight: FontWeight.bold,
                                 ),
-                              ),
-                              SizedBox(width: 4.w),
-                              Text(
-                                'KB/S',
-                                style: TextStyle(
-                                    fontSize: 12.sp, color: Colors.black),
                               ),
                             ],
                           ),
@@ -188,120 +317,126 @@ class _GuestHomeScreenState extends State<GuestHomeScreen> {
                 ),
               ),
               SizedBox(height: 16.h),
-              Transform.translate(
-                offset: Offset(0, -170.h),
-                child: Container(
-                  width: double.infinity,
-                  padding: EdgeInsets.all(16.w),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF6F6F6),
-                    borderRadius: BorderRadius.circular(10.r),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 10.r,
-                        offset: Offset(0, 4.h),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    children: [
-                      Row(
-                        children: [
-                          Text(
-                            'Remaining Time',
-                            style: TextStyle(
+              if (!isPremium) ...[ SizedBox(height: 50.h),],
+              if (isPremium) ...[
+                Transform.translate(
+                  offset: Offset(0, -170.h),
+                  child: Container(
+                    width: double.infinity,
+                    padding: EdgeInsets.all(16.w),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF6F6F6),
+                      borderRadius: BorderRadius.circular(10.r),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 10.r,
+                          offset: Offset(0, 4.h),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      children: [
+                        Row(
+                          children: [
+                            Text(
+                              'Remaining Time',
+                              style: TextStyle(
+                                  fontSize: 14.sp,
+                                  color: const Color(0xFF545454)),
+                            ),
+                            const Spacer(),
+                            Text(
+                              _formatDuration(remainingTime),
+                              style: TextStyle(
                                 fontSize: 14.sp,
-                                color: const Color(0xFF545454)),
-                          ),
-                          const Spacer(),
-                          Text(
-                            '00:25:21',
-                            style: TextStyle(
-                              fontSize: 14.sp,
-                              color: Colors.black,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 16.h),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: ElevatedButton(
-                              onPressed: () {},
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFFEC8304),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8.r),
-                                ),
+                                color: Colors.black,
+                                fontWeight: FontWeight.bold,
                               ),
-                              child: Text(
-                                '+Random Time',
-                                style: TextStyle(
-                                  fontSize: 12.sp,
-                                  color: const Color(0xFFFDF3E6),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 16.h),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: ElevatedButton(
+                                onPressed: () {},
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFFEC8304),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8.r),
+                                  ),
+                                ),
+                                child: Text(
+                                  '+Random Time',
+                                  style: TextStyle(
+                                    fontSize: 12.sp,
+                                    color: const Color(0xFFFDF3E6),
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                          SizedBox(width: 12.w),
-                          Expanded(
-                            child: OutlinedButton(
-                              onPressed: () {},
-                              style: OutlinedButton.styleFrom(
-                                side: BorderSide(
-                                    color: const Color(0xFFEC8304),
-                                    width: 1.0.w),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8.r),
-                                ),
-                              ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    'Go Pro',
-                                    style: TextStyle(
-                                      fontSize: 12.sp,
+                            SizedBox(width: 12.w),
+                            Expanded(
+                              child: OutlinedButton(
+                                onPressed: () {},
+                                style: OutlinedButton.styleFrom(
+                                  side: BorderSide(
                                       color: const Color(0xFFEC8304),
+                                      width: 1.0.w),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8.r),
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      'Go Pro',
+                                      style: TextStyle(
+                                        fontSize: 12.sp,
+                                        color: const Color(0xFFEC8304),
+                                      ),
                                     ),
-                                  ),
-                                  SizedBox(width: 8.w),
-                                  SvgPicture.asset(
-                                    'assets/images/crown.svg',
-                                    height: 10.h,
-                                  ),
-                                ],
+                                    SizedBox(width: 8.w),
+                                    SvgPicture.asset(
+                                      'assets/images/crown.svg',
+                                      height: 10.h,
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
-                          ),
-                        ],
-                      ),
-                    ],
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
+              ],
               //SizedBox(height: 16.h),
               Transform.translate(
                 offset: Offset(0, -130.h),
-                child: SvgPicture.asset(
-                  'assets/images/tap_button.svg',
-                  width: 50.w,
-                  height: 50.h,
+                child: GestureDetector(
+                  onTap: _disconnectVPN,
+                  child: SvgPicture.asset(
+                    'assets/images/tap_button.svg',
+                    width: 50.w,
+                    height: 50.h,
+                  ),
                 ),
               ),
               Transform.translate(
                 offset: Offset(0, -130.h),
                 child: Text(
-                'Tap to Disconnect',
-                style: TextStyle(
-                    fontSize: 28.sp,
-                    color: const Color(0xFF393E7A),
-                    fontWeight: FontWeight.bold),
-              ),
-        )
+                  'Tap to Disconnect',
+                  style: TextStyle(
+                      fontSize: 28.sp,
+                      color: const Color(0xFF393E7A),
+                      fontWeight: FontWeight.bold),
+                ),
+              )
             ],
           ),
         ),

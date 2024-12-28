@@ -6,6 +6,7 @@ import 'package:bdix_vpn/presentation/profile_screen/normal_login_profile_screen
 import 'package:bdix_vpn/presentation/setting_screen/guest_setting_screen.dart';
 import 'package:bdix_vpn/presentation/subscription_screen/premium_subscription_screen.dart';
 import 'package:get/get.dart';
+import '../controllers/openvpn_controller.dart';
 import '../presentation/connected_screen/normal_connected_screen.dart';
 import '../presentation/connection_screen/connection_report_screen.dart';
 import '../presentation/forgot_password/forgot_password.dart';
@@ -51,25 +52,42 @@ class AppRoutes {
     GetPage(name: splash, page: () => OneTimeSplashScreen()),
     GetPage(name: welcome, page: () => WelcomeScreen()),
     GetPage(name: signIn, page: () => SignInScreen()),
-    GetPage(name: forgotPassword, page: () => ForgetPasswordApp()),
-    GetPage(name: forgotPassword2, page: () => ResetPasswordApp()),
-    GetPage(name: signUp1, page: () => SignUpApp()),
-    GetPage(name: signUpOTP, page: () => SignUp3()),
-    GetPage(name: signUpPass, page: () => SignUp6()),
+    GetPage(name: forgotPassword, page: () => const ForgetPasswordApp()),
+    GetPage(name: forgotPassword2, page: () => const ResetPasswordApp()),
+    GetPage(name: signUp1, page: () => const SignUpScreen()),
+    GetPage(name: signUpOTP, page: () => const SignUp3()),
+    GetPage(name: signUpPass, page: () => const SignUp6()),
     GetPage(name: guestHome, page: () => GuestHome()),
-    GetPage(name: connectionReportScreen, page: () => const ConnectionReportScreen()),
+    GetPage(
+        name: connectionReportScreen,
+        page: () => const ConnectionReportScreen()),
     GetPage(name: guestServerScreen, page: () => const GuestServerScreen()),
     GetPage(name: normalServerScreen, page: () => const NormalServerScreen()),
     GetPage(name: guestProfileScreen, page: () => const GuestProfileScreen()),
-    GetPage(name: normalLoginProfileScreen, page: () => const NormalLoginProfileScreen()),
-    GetPage(name: normalConnectedScreen, page: () => const ConnectedDeviceScreen()),
+    GetPage(
+        name: normalLoginProfileScreen,
+        page: () => const NormalLoginProfileScreen()),
+    GetPage(
+        name: normalConnectedScreen, page: () => const ConnectedDeviceScreen()),
     GetPage(name: guestSettingScreen, page: () => const GuestSettingScreen()),
     GetPage(name: normalSettingScreen, page: () => const NormalSettingScreen()),
-    GetPage(name: premiumSettingScreen, page: () => const PremiumSettingScreen()),
-    GetPage(name: premiumSubscriptionScreen, page: () => const PremiumSubscriptionScreen()),
-    GetPage(name: connectionFailedScreen, page: () => const ConnectionFailedScreen()),
-    GetPage(name: premiumConnectedScreen, page: () => const PremiumConnectedScreen()),
-    GetPage(name: guestHomeScreen, page: () => const GuestHomeScreen()),
-
+    GetPage(
+        name: premiumSettingScreen, page: () => const PremiumSettingScreen()),
+    GetPage(
+        name: premiumSubscriptionScreen,
+        page: () => const PremiumSubscriptionScreen()),
+    GetPage(
+        name: connectionFailedScreen,
+        page: () => const ConnectionFailedScreen()),
+    GetPage(
+        name: premiumConnectedScreen,
+        page: () => const PremiumConnectedScreen()),
+    GetPage(
+      name: guestHomeScreen,
+      page: () {
+        final OpenVPNController vpnController = Get.find<OpenVPNController>();
+        return GuestHomeScreen(engine: vpnController.engine);
+      },
+    )
   ];
 }

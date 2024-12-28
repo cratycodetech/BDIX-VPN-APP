@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:get/get_core/src/get_main.dart';
+
+import '../routes/routes.dart';
 
 class BottomNavBar extends StatelessWidget {
   final int currentIndex;
@@ -14,7 +18,10 @@ class BottomNavBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return BottomNavigationBar(
       currentIndex: currentIndex,
-      onTap: onTap,
+      onTap: (index) {
+        _handleTap(context, index); // Custom tap handler for each item
+        onTap(index); // Pass the tap event to the parent
+      },
       selectedItemColor: const Color(0xFF080E59),
       unselectedItemColor: const Color(0xFF9B9594),
       items: const [
@@ -36,5 +43,24 @@ class BottomNavBar extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  void _handleTap(BuildContext context, int index) {
+    switch (index) {
+      case 0:
+        Get.toNamed(AppRoutes.guestHomeScreen);
+        break;
+      case 1:
+        Get.toNamed(AppRoutes.guestServerScreen);
+        break;
+      case 2:
+        Get.toNamed(AppRoutes.guestProfileScreen);
+        break;
+      case 3:
+        Get.toNamed(AppRoutes.guestSettingScreen);
+        break;
+      default:
+        print('Unknown item tapped');
+    }
   }
 }

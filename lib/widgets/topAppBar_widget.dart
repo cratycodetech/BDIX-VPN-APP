@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
 class TopAppBar extends StatelessWidget implements PreferredSizeWidget {
-  const TopAppBar({Key? key}) : super(key: key);
+  final bool isPremium; // Accept user type as a parameter
+
+  const TopAppBar({super.key, required this.isPremium});
 
   @override
   Widget build(BuildContext context) {
@@ -53,6 +55,7 @@ class TopAppBar extends StatelessWidget implements PreferredSizeWidget {
             ),
 
             // "Go Pro" icon and text on the right
+            if (isPremium)
             Row(
               children: [
                 const SizedBox(width: 8),

@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../routes/routes.dart';
+import 'package:device_info_plus/device_info_plus.dart';
+
+import '../../service/auth_service.dart';
+
 
 void main() {
   runApp(const welcome_screen());
@@ -30,7 +35,7 @@ class WelcomeScreen extends StatelessWidget {
           // Logo
           Center(
             child: Image.asset(
-              'assets/images/logo.png', // Replace with your logo asset path
+              'assets/images/logo.png',
               width: 150,
               height: 150,
             ),
@@ -127,8 +132,49 @@ class WelcomeScreen extends StatelessWidget {
           const SizedBox(height: 16),
           // Continue as Guest Button
           TextButton(
-            onPressed: () {
-              // Continue as Guest Action
+            onPressed: () async {
+              DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+              AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
+
+              String? deviceId = androidInfo.id; // Fetch unique device ID
+
+              if (deviceId != null) {
+                print('Device ID: $deviceId'); // Log or use it as needed
+
+                // Show loading indicator
+                showDialog(
+                  context: context,
+                  barrierDismissible: false, // Prevent dismissing the dialog by tapping outside
+                  builder: (context) => const Center(
+                    child: CircularProgressIndicator(),
+                  ),
+                );
+
+                try {
+                  // Call guestUser method
+                  await AuthService().guestUser(deviceId: deviceId);
+
+                  // Store the device ID locally in shared preferences
+                  SharedPreferences prefs = await SharedPreferences.getInstance();
+                  await prefs.setString('guest_device_id', deviceId);
+
+                  // If successful, navigate to the guest home screen
+                  Get.toNamed(AppRoutes.guestHome);
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Guest access finished, please sign up to continue.'),
+                      duration: Duration(seconds: 3),
+                    ),
+                  );
+                } finally {
+                  // Dismiss the loading dialog
+                  Navigator.of(context).pop();
+
+                }
+              } else {
+                print('Failed to retrieve device ID');
+              }
             },
             child: const Text(
               'Continue as a Guest',
