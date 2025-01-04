@@ -53,7 +53,7 @@ class AppRoutes {
     GetPage(name: welcome, page: () => WelcomeScreen()),
     GetPage(name: signIn, page: () => SignInScreen()),
     GetPage(name: forgotPassword, page: () => const ForgetPasswordApp()),
-    GetPage(name: forgotPassword2, page: () => const ResetPasswordApp()),
+    GetPage(name: forgotPassword2, page: () => ResetPasswordScreen()),
     GetPage(name: signUp1, page: () => const SignUpScreen()),
     GetPage(name: signUpOTP, page: () => const SignUp3()),
     GetPage(name: signUpPass, page: () => const SignUp6()),

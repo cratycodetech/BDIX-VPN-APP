@@ -38,6 +38,7 @@ class _SignUp3State extends State<SignUp3> {
   final List<TextEditingController> _controllers =
       List.generate(6, (index) => TextEditingController());
   final String email = Get.arguments['email'] ?? '';
+  final isForgetPassword = Get.arguments?['isForgetPassword'] ?? false;
   final AuthService _authService = AuthService();
 
 
@@ -209,8 +210,12 @@ class _SignUp3State extends State<SignUp3> {
 
                       Navigator.of(context).pop();
 
-                      // Navigate to the next screen on success
-                      Get.toNamed(AppRoutes.signUpPass, arguments: {'email': email});
+                      if(isForgetPassword){
+                        Get.toNamed(AppRoutes.forgotPassword2, arguments: {'email': email});
+                      }else{
+                        Get.toNamed(AppRoutes.signUpPass, arguments: {'email': email});
+                      }
+
                     } catch (error) {
                       Navigator.of(context).pop();
                       ScaffoldMessenger.of(context).showSnackBar(

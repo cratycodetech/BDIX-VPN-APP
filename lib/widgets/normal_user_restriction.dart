@@ -4,7 +4,7 @@ import 'package:get/get.dart';
 import '../controllers/openvpn_controller.dart';
 
 
-void showSignUpDialog(BuildContext context) async {
+void normalUserRestrictionUpDialog(BuildContext context) async {
 
   final vpnController = Get.find<OpenVPNController>();
 

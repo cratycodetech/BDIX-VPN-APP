@@ -1,25 +1,46 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import '../../routes/routes.dart';
+import '../../service/api/auth_service.dart';
+import '../../utils/validation_utils.dart';
 
-void main() {
-  runApp(const ResetPasswordApp());
-}
-
-class ResetPasswordApp extends StatelessWidget {
-  const ResetPasswordApp({Key? key}) : super(key: key);
-
+class ResetPasswordScreen extends StatefulWidget {
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: ResetPasswordScreen(),
-    );
-  }
+  _ResetPasswordScreenState createState() => _ResetPasswordScreenState();
 }
 
-class ResetPasswordScreen extends StatelessWidget {
-  final TextEditingController passwordController = TextEditingController();
-  final TextEditingController confirmPasswordController =
-      TextEditingController();
+class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
+  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _confirmPasswordController = TextEditingController();
+  final AuthService _authService = AuthService();
+  final String email = Get.arguments['email'] ?? '';
+
+  String? _passwordError;
+  String? _confirmPasswordError;
+
+  void _resetPassword() async {
+    final password = _passwordController.text;
+    final confirmPassword = _confirmPasswordController.text;
+
+    setState(() {
+      _passwordError = ValidationUtils.validatePassword(password);
+      _confirmPasswordError = ValidationUtils.validateConfirmPassword(password, confirmPassword);
+    });
+
+    if (_passwordError == null && _confirmPasswordError == null) {
+      try {
+        await _authService.resetPassword(email: email, newPassword: password);
+        Get.toNamed(AppRoutes.signIn);
+      } catch (e) {
+        Get.snackbar(
+          'Error',
+          e.toString(),
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +52,7 @@ class ResetPasswordScreen extends StatelessWidget {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
           onPressed: () {
-            Navigator.pop(context); // Navigate back
+            Navigator.pop(context);
           },
         ),
       ),
@@ -42,16 +63,14 @@ class ResetPasswordScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               const SizedBox(height: 40),
-              // Logo
               Center(
                 child: Image.asset(
-                  'assets/images/logo.png', // Replace with your actual logo path
+                  'assets/images/logo.png',
                   height: 120,
                   width: 120,
                 ),
               ),
               const SizedBox(height: 40),
-              // Password Field
               const Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
@@ -65,7 +84,7 @@ class ResetPasswordScreen extends StatelessWidget {
               ),
               const SizedBox(height: 10),
               TextFormField(
-                controller: passwordController,
+                controller: _passwordController,
                 obscureText: true,
                 decoration: InputDecoration(
                   hintText: 'Enter New Password',
@@ -93,10 +112,10 @@ class ResetPasswordScreen extends StatelessWidget {
                     horizontal: 16,
                     vertical: 12,
                   ),
+                  errorText: _passwordError,
                 ),
               ),
               const SizedBox(height: 20),
-              // Confirm Password Field
               const Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
@@ -110,7 +129,7 @@ class ResetPasswordScreen extends StatelessWidget {
               ),
               const SizedBox(height: 10),
               TextFormField(
-                controller: confirmPasswordController,
+                controller: _confirmPasswordController,
                 obscureText: true,
                 decoration: InputDecoration(
                   hintText: 'Confirm New Password',
@@ -138,10 +157,10 @@ class ResetPasswordScreen extends StatelessWidget {
                     horizontal: 16,
                     vertical: 12,
                   ),
+                  errorText: _confirmPasswordError,
                 ),
               ),
               const SizedBox(height: 40),
-              // Confirm Button
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
@@ -152,9 +171,7 @@ class ResetPasswordScreen extends StatelessWidget {
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
-                  onPressed: () {
-                    // Confirm password reset action
-                  },
+                  onPressed: _resetPassword,
                   child: const Text(
                     'Confirm',
                     style: TextStyle(

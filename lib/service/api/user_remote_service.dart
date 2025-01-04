@@ -20,17 +20,73 @@ class UserRemoteService {
 
       final response = await http.get(
         url,
-        headers: {'Content-Type': 'application/json','Authorization': 'Bearer $token',},
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
       );
 
       if (response.statusCode == 200) {
         final responseBody = jsonDecode(response.body);
         return User.fromJson(responseBody);
       } else {
-        throw Exception("Failed to fetch user details: ${response.reasonPhrase}");
+        throw Exception(
+            "Failed to fetch user details: ${response.reasonPhrase}");
       }
     } catch (e) {
       rethrow;
+    }
+  }
+
+  Future<void> updateEmail({required String email}) async {
+    final token = await _tokenService.getToken();
+
+    if (token == null) {
+      throw Exception('No token found');
+    }
+
+    final url = Uri.parse('$baseUrl/api/v1/auth/logout');
+    final response = await http.put(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({
+        'email': email,
+      }),
+    );
+
+    if (response.statusCode != 200) {
+      final errorResponse = jsonDecode(response.body);
+      throw Exception(errorResponse['message'] ?? 'Update failed');
+    }
+  }
+
+  Future<void> updatePassword(
+      {required String currentPass, required newPass}) async {
+    final token = await _tokenService.getToken();
+
+    if (token == null) {
+      throw Exception('No token found');
+    }
+
+    final url = Uri.parse('$baseUrl/api/v1/auth/logout');
+    final response = await http.put(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({
+        'currentPassword': currentPass,
+        'newPassword': newPass,
+      }),
+    );
+
+    if (response.statusCode != 200) {
+      final errorResponse = jsonDecode(response.body);
+      throw Exception(errorResponse['message'] ?? 'Update failed');
     }
   }
 }

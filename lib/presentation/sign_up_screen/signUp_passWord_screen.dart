@@ -5,7 +5,6 @@ import '../../routes/routes.dart';
 import '../../service/api/auth_service.dart';
 import '../../utils/validation_utils.dart';
 
-
 void main() {
   runApp(const signUpPaass());
 }
@@ -31,33 +30,43 @@ class SignUp6 extends StatefulWidget {
 }
 
 class _SignUp6State extends State<SignUp6> {
+  final TextEditingController _currentPasswordController =
+      TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController = TextEditingController();
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
   final AuthService _authService = AuthService();
   final String email = Get.arguments['email'] ?? '';
+  final arguments = Get.arguments as Map<String, dynamic>?;
 
   String? _passwordError;
   String? _confirmPasswordError;
+  bool _obscureCurrentPassword = true;
+  bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
 
   void _validateAndCreateAccount() async {
     final password = _passwordController.text;
+    final currentPassword = _currentPasswordController.text;
     final confirmPassword = _confirmPasswordController.text;
 
     setState(() {
       _passwordError = ValidationUtils.validatePassword(password);
-      _confirmPasswordError = ValidationUtils.validateConfirmPassword(password, confirmPassword);
+      _confirmPasswordError =
+          ValidationUtils.validateConfirmPassword(password, confirmPassword);
     });
 
     if (_passwordError == null && _confirmPasswordError == null) {
       try {
-        await _authService.signUp(email: email, password: password);
+        await _authService.signUp(email: email, password: password, flag: true);
         Get.toNamed(AppRoutes.guestHome);
       } catch (e) {
-        Get.snackbar(
-          'Error',
-          e.toString(),
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
+        print("ki somossa $e");
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('This email is already registered, try with new one'),
+            duration: Duration(seconds: 3),
+          ),
         );
       }
     }
@@ -65,6 +74,7 @@ class _SignUp6State extends State<SignUp6> {
 
   @override
   Widget build(BuildContext context) {
+    final fromProfilePage = arguments?['fromProfilePage'] ?? false;
     return Scaffold(
       backgroundColor: Colors.white,
       body: SingleChildScrollView(
@@ -72,6 +82,7 @@ class _SignUp6State extends State<SignUp6> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             const SizedBox(height: 50),
+            if (fromProfilePage) const SizedBox(height: 100),
             // App Logo
             Center(
               child: Container(
@@ -91,14 +102,60 @@ class _SignUp6State extends State<SignUp6> {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Column(
                 children: [
+                  if (fromProfilePage)
+                    TextField(
+                      controller: _currentPasswordController,
+                      obscureText: _obscureCurrentPassword,
+                      decoration: InputDecoration(
+                        hintText: 'Current Password',
+                        prefixIcon:
+                            const Icon(Icons.lock_outline, color: Colors.grey),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _obscureCurrentPassword
+                                ? Icons.visibility_off
+                                : Icons.visibility,
+                            color: Colors.grey,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _obscureCurrentPassword =
+                                  !_obscureCurrentPassword;
+                            });
+                          },
+                        ),
+                        filled: true,
+                        fillColor: const Color(0xFFF5F5F5),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(4),
+                          borderSide:
+                              const BorderSide(color: Color(0xFFE2DBDA)),
+                        ),
+                        errorText: _passwordError,
+                      ),
+                    ),
+                  const SizedBox(height: 14),
                   // Password Field
                   TextField(
                     controller: _passwordController,
-                    obscureText: true,
+                    obscureText: _obscurePassword,
                     decoration: InputDecoration(
-                      hintText: 'Password',
-                      prefixIcon: const Icon(Icons.lock_outline, color: Colors.grey),
-                      suffixIcon: const Icon(Icons.visibility_off, color: Colors.grey),
+                      hintText: fromProfilePage ? 'New Password' : 'Password',
+                      prefixIcon:
+                          const Icon(Icons.lock_outline, color: Colors.grey),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _obscurePassword
+                              ? Icons.visibility_off
+                              : Icons.visibility,
+                          color: Colors.grey,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _obscurePassword = !_obscurePassword;
+                          });
+                        },
+                      ),
                       filled: true,
                       fillColor: const Color(0xFFF5F5F5),
                       border: OutlineInputBorder(
@@ -112,11 +169,26 @@ class _SignUp6State extends State<SignUp6> {
                   // Confirm Password Field
                   TextField(
                     controller: _confirmPasswordController,
-                    obscureText: true,
+                    obscureText: _obscureConfirmPassword,
                     decoration: InputDecoration(
-                      hintText: 'Confirm Password',
-                      prefixIcon: const Icon(Icons.lock_outline, color: Colors.grey),
-                      suffixIcon: const Icon(Icons.visibility_off, color: Colors.grey),
+                      hintText: fromProfilePage
+                          ? 'Confirm New Password'
+                          : 'Confirm Password',
+                      prefixIcon:
+                          const Icon(Icons.lock_outline, color: Colors.grey),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _obscureConfirmPassword
+                              ? Icons.visibility_off
+                              : Icons.visibility,
+                          color: Colors.grey,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _obscureConfirmPassword = !_obscureConfirmPassword;
+                          });
+                        },
+                      ),
                       filled: true,
                       fillColor: const Color(0xFFF5F5F5),
                       border: OutlineInputBorder(
@@ -144,9 +216,9 @@ class _SignUp6State extends State<SignUp6> {
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
-                  child: const Text(
-                    'Create account',
-                    style: TextStyle(
+                  child: Text(
+                    fromProfilePage ? 'Update Password' : 'Create account',
+                    style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
@@ -155,72 +227,74 @@ class _SignUp6State extends State<SignUp6> {
                 ),
               ),
             ),
+
             const SizedBox(height: 20),
             // Sign In Text
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Text(
-                    'Already have an account?',
-                    style: TextStyle(
-                      color: Color(0xFF545454),
-                      fontSize: 12,
-                    ),
-                  ),
-                  GestureDetector(
-                    onTap: () {
-                      Get.toNamed(
-                        AppRoutes.signIn);
-                    },
-                    child: const Text(
-                      ' Sign in',
-                      style: TextStyle(
-                        color: Color(0xFF393E7A),
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 40),
-            // Privacy Policy Text
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16),
-              child: Text.rich(
-                TextSpan(
+            if (!fromProfilePage)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    TextSpan(
-                      text: 'By creating an account, you agree to our ',
+                    const Text(
+                      'Already have an account?',
                       style: TextStyle(
-                        color: Color(0xFF8A8A8A),
-                        fontSize: 10,
+                        color: Color(0xFF545454),
+                        fontSize: 12,
                       ),
                     ),
-                    TextSpan(
-                      text: 'Privacy Policy',
-                      style: TextStyle(
-                        color: Color(0xFFEC8304),
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    TextSpan(
-                      text:
-                      ', which outlines how we handle your personal data and browsing information to ensure secure and private access to the VPN service.',
-                      style: TextStyle(
-                        color: Color(0xFF8A8A8A),
-                        fontSize: 10,
+                    GestureDetector(
+                      onTap: () {
+                        Get.toNamed(AppRoutes.signIn);
+                      },
+                      child: const Text(
+                        ' Sign in',
+                        style: TextStyle(
+                          color: Color(0xFF393E7A),
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ],
                 ),
-                textAlign: TextAlign.center,
               ),
-            ),
+            const SizedBox(height: 40),
+            // Privacy Policy Text
+            if (!fromProfilePage)
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16),
+                child: Text.rich(
+                  TextSpan(
+                    children: [
+                      TextSpan(
+                        text: 'By creating an account, you agree to our ',
+                        style: TextStyle(
+                          color: Color(0xFF8A8A8A),
+                          fontSize: 10,
+                        ),
+                      ),
+                      TextSpan(
+                        text: 'Privacy Policy',
+                        style: TextStyle(
+                          color: Color(0xFFEC8304),
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      TextSpan(
+                        text:
+                            ', which outlines how we handle your personal data and browsing information to ensure secure and private access to the VPN service.',
+                        style: TextStyle(
+                          color: Color(0xFF8A8A8A),
+                          fontSize: 10,
+                        ),
+                      ),
+                    ],
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
             const SizedBox(height: 40),
           ],
         ),

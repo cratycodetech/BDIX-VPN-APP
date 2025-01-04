@@ -21,6 +21,7 @@ class _GuestHomeState extends State<GuestHome> {
   Get.find<OpenVPNController>();
   final UserService _userService = UserService();
   bool isPremium = false;
+  bool isCurrentScreen = true;
 
 
 
@@ -31,6 +32,12 @@ class _GuestHomeState extends State<GuestHome> {
     _observeConnection();
     _loadUserType();
     _conditionalStartVPN();
+  }
+
+  @override
+  void dispose() {
+    isCurrentScreen = false;
+    super.dispose();
   }
 
   Future<void> _loadUserType() async {
@@ -48,7 +55,7 @@ class _GuestHomeState extends State<GuestHome> {
 
   void _observeConnection() {
     vpnController.isConnected.listen((connected) {
-      if (connected) {
+      if (connected && isCurrentScreen) {
         Future.microtask(() => Get.off(() => GuestHomeScreen(engine: vpnController.engine)));
       }
     });

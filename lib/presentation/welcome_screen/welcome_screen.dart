@@ -169,6 +169,8 @@ class WelcomeScreen extends StatelessWidget {
                   );
                 } finally {
                   // Dismiss the loading dialog
+                  SharedPreferences prefs = await SharedPreferences.getInstance();
+                  await prefs.setString('guest_device_id', deviceId);
                   Navigator.of(context).pop();
                   Get.toNamed(AppRoutes.guestHome);
                 }

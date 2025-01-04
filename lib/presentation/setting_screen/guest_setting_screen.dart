@@ -3,7 +3,6 @@ import 'package:flutter_svg/svg.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
 import '../../routes/routes.dart';
 import '../../service/api/auth_service.dart';
 import '../../service/device_service.dart';
@@ -44,7 +43,7 @@ class _GuestSettingScreenState extends State<GuestSettingScreen> {
 
   void _onItemTapped(int index) {
     setState(() {
-      _currentIndex = index; // Update the selected index
+      _currentIndex = index;
     });
   }
 

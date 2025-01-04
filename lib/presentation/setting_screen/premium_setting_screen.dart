@@ -1,9 +1,14 @@
 import 'package:bdix_vpn/service/user_service.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 import '../../models/user_preferences.dart';
+import '../../routes/routes.dart';
+import '../../service/api/auth_service.dart';
 import '../../service/database/database_helper.dart';
+import '../../service/device_service.dart';
 import '../../widgets/bottomNavigationBar_widget.dart';
+import '../../widgets/disconnect_dialog_box.dart';
 
 class PremiumSettingScreen extends StatefulWidget {
   const PremiumSettingScreen({super.key});
@@ -16,17 +21,18 @@ class _PremiumSettingScreenState extends State<PremiumSettingScreen> {
   int? _selectedValue = 0;
   late int _currentIndex = 0;
   final UserService _userService = UserService();
+  final DeviceService _deviceService = DeviceService();
+  final AuthService _authService = AuthService();
   bool _isKillSwitchToggled = false;
   bool _isConnectOnStartToggled = false;
   bool _isShowNotificationToggled = false;
-
+  bool isGuest = false;
 
   void _onItemTapped(int index) {
     setState(() {
       _currentIndex = index;
     });
   }
-
 
   void _toggleSwitch(int switchType, bool value) {
     setState(() {
@@ -45,7 +51,6 @@ class _PremiumSettingScreenState extends State<PremiumSettingScreen> {
     });
   }
 
-
   void _savePreferences() async {
     final userId = await _userService.getUserId();
     if (userId == null) {
@@ -63,7 +68,6 @@ class _PremiumSettingScreenState extends State<PremiumSettingScreen> {
     await DatabaseHelper().insertUserPreferences(preferences);
   }
 
-
   void _handleRadioValueChange(int? value) {
     setState(() {
       _selectedValue = value;
@@ -74,10 +78,12 @@ class _PremiumSettingScreenState extends State<PremiumSettingScreen> {
   void _loadPreferences() async {
     final userId = await _userService.getUserId();
     if (userId != null) {
-      UserPreferences? preferences = await DatabaseHelper().getUserPreferences(userId);
+      UserPreferences? preferences =
+          await DatabaseHelper().getUserPreferences(userId);
       if (preferences != null) {
         setState(() {
-          _selectedValue = preferences.ipSec ? 0 : (preferences.openVPN ? 1 : 2);
+          _selectedValue =
+              preferences.ipSec ? 0 : (preferences.openVPN ? 1 : 2);
           _isKillSwitchToggled = preferences.blockInternet;
           _isConnectOnStartToggled = preferences.connectOnStart;
           _isShowNotificationToggled = preferences.showNotification;
@@ -86,10 +92,41 @@ class _PremiumSettingScreenState extends State<PremiumSettingScreen> {
     }
   }
 
+  Future<void> _logout(BuildContext context) async {
+    final shouldDisconnect = await showDialog<bool>(
+      context: context,
+      builder: (context) => const DisconnectDialog(),
+    );
+
+    if (shouldDisconnect == true) {
+      try {
+        await _userService.removeUserType();
+        await _authService.logout();
+        Get.toNamed(AppRoutes.signIn);
+      } catch (e) {
+        Get.snackbar(
+          'Error',
+          'Logout failed. Please try again.',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+      }
+    }
+  }
+
   @override
   void initState() {
     super.initState();
     _loadPreferences();
+    _checkGuestStatus();
+  }
+
+  void _checkGuestStatus() async {
+    bool guestStatus = await _deviceService.checkGuestStatus();
+    setState(() {
+      isGuest = guestStatus;
+    });
   }
 
   @override
@@ -124,36 +161,40 @@ class _PremiumSettingScreenState extends State<PremiumSettingScreen> {
                 ),
               ],
             ),
-            Row(
-              children: [
-                const Text(
-                  'IPSec',
-                  style: TextStyle(fontSize: 18, color: Colors.black),
-                ),
-                const Spacer(),
-                Radio<int>(
-                  value: 0,
-                  groupValue: _selectedValue,
-                  onChanged: _handleRadioValueChange,
-                ),
-              ],
+            // Row(
+            //   children: [
+            //     const Text(
+            //       'IPSec',
+            //       style: TextStyle(fontSize: 18, color: Colors.black),
+            //     ),
+            //     const Spacer(),
+            //     Radio<int>(
+            //       value: 0,
+            //       groupValue: _selectedValue,
+            //       onChanged: _handleRadioValueChange,
+            //     ),
+            //   ],
+            // ),
+            // const SizedBox(
+            //   height: 1,
+            // ),
+            // Row(
+            //   children: [
+            //     const Text(
+            //       'ISSR',
+            //       style: TextStyle(fontSize: 18, color: Colors.black),
+            //     ),
+            //     const Spacer(),
+            //     Radio<int>(
+            //       value: 1,
+            //       groupValue: _selectedValue,
+            //       onChanged: _handleRadioValueChange,
+            //     ),
+            //   ],
+            // ),
+            const SizedBox(
+              height: 8,
             ),
-            const SizedBox(height: 1,),
-            Row(
-              children: [
-                const Text(
-                  'ISSR',
-                  style: TextStyle(fontSize: 18, color: Colors.black),
-                ),
-                const Spacer(),
-                Radio<int>(
-                  value: 1,
-                  groupValue: _selectedValue,
-                  onChanged: _handleRadioValueChange,
-                ),
-              ],
-            ),
-            const SizedBox(height: 8,),
             const Center(
               child: SizedBox(
                 width: 420,
@@ -194,9 +235,8 @@ class _PremiumSettingScreenState extends State<PremiumSettingScreen> {
                 Transform.scale(
                   scale: 0.8, // Adjust the scale factor to resize the Switch
                   child: Switch(
-                    value:  _isKillSwitchToggled,
-                    onChanged:  (value) => _toggleSwitch(0, value)
-                  ),
+                      value: _isKillSwitchToggled,
+                      onChanged: (value) => _toggleSwitch(0, value)),
                 ),
                 const SizedBox(
                   width: 8,
@@ -246,9 +286,8 @@ class _PremiumSettingScreenState extends State<PremiumSettingScreen> {
                 Transform.scale(
                   scale: 0.8, // Adjust the scale factor to resize the Switch
                   child: Switch(
-                    value: _isConnectOnStartToggled,
-                    onChanged: (value) => _toggleSwitch(1, value)
-                  ),
+                      value: _isConnectOnStartToggled,
+                      onChanged: (value) => _toggleSwitch(1, value)),
                 ),
                 const SizedBox(
                   width: 8,
@@ -300,9 +339,8 @@ class _PremiumSettingScreenState extends State<PremiumSettingScreen> {
                 Transform.scale(
                   scale: 0.8, // Adjust the scale factor to resize the Switch
                   child: Switch(
-                    value: _isShowNotificationToggled,
-                    onChanged: (value) => _toggleSwitch(2, value)
-                  ),
+                      value: _isShowNotificationToggled,
+                      onChanged: (value) => _toggleSwitch(2, value)),
                 ),
                 const SizedBox(
                   width: 8,
@@ -327,30 +365,34 @@ class _PremiumSettingScreenState extends State<PremiumSettingScreen> {
             const SizedBox(
               width: 16,
             ),
-            const Text(
-              'Account',
-              style: TextStyle(
-                  fontSize: 14,
-                  color: Color(0xFFDBD2D1),
-                  fontWeight: FontWeight.bold),
-            ),
-            Row(
-              children: [
-                const Text(
-                  'Logout',
-                  style: TextStyle(fontSize: 18, color: Colors.black),
-                ),
-                const Spacer(),
-                const SizedBox(
-                  height: 44,
-                ),
-                IconButton(
-                  icon: const Icon(Icons.logout),
-                  onPressed: () {},
-                ),
-                const SizedBox(width: 16,)
-              ],
-            ),
+            if (!isGuest) ...[
+              const Text(
+                'Account',
+                style: TextStyle(
+                    fontSize: 14,
+                    color: Color(0xFFDBD2D1),
+                    fontWeight: FontWeight.bold),
+              ),
+              Row(
+                children: [
+                  const Text(
+                    'Logout',
+                    style: TextStyle(fontSize: 18, color: Colors.black),
+                  ),
+                  const Spacer(),
+                  const SizedBox(
+                    height: 44,
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.logout),
+                    onPressed: () => _logout(context),
+                  ),
+                  const SizedBox(
+                    width: 16,
+                  )
+                ],
+              ),
+            ],
           ],
         ),
       ),

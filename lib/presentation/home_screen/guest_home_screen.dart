@@ -13,13 +13,13 @@ import '../../service/device_service.dart';
 import '../../service/user_service.dart';
 import '../../utils/speed_utils.dart';
 import '../../widgets/bottomNavigationBar_widget.dart';
+import '../../widgets/normal_user_restriction.dart';
 import '../../widgets/rewarded_ad_dialog.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/timer_provider.dart';
 import '../../widgets/sign_up_dialog.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-
 
 class GuestHomeScreen extends ConsumerStatefulWidget {
   final OpenVPN engine;
@@ -39,11 +39,10 @@ class _GuestHomeScreenState extends ConsumerState<GuestHomeScreen> {
   final Speed _speed = Speed();
   final UserService _userService = UserService();
   final DeviceService _deviceService = DeviceService();
-  bool isPremium = false;
+  bool isNotPremium = false;
   bool isGuest = false;
   DateTime? sessionStartTime;
   DateTime? sessionEndTime;
-
 
   void _onItemTapped(int index) {
     setState(() {
@@ -59,7 +58,6 @@ class _GuestHomeScreenState extends ConsumerState<GuestHomeScreen> {
 
     print('Data use in guest $dataUsedBytes');
 
-
     final dbHelper = DatabaseHelper();
     await dbHelper.insertSession(
       sessionStartTime.toString(),
@@ -69,9 +67,9 @@ class _GuestHomeScreenState extends ConsumerState<GuestHomeScreen> {
 
     ref.read(timerProvider.notifier).resetTimer();
     try {
-
       String publicIP = "Unknown";
-      final response = await http.get(Uri.parse('https://api64.ipify.org?format=json'));
+      final response =
+          await http.get(Uri.parse('https://api64.ipify.org?format=json'));
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         publicIP = data['ip'] ?? "Unknown";
@@ -140,9 +138,9 @@ class _GuestHomeScreenState extends ConsumerState<GuestHomeScreen> {
   @override
   void dispose() {
     _dialogTimer.cancel();
+    _speed.startMonitoring();
     super.dispose();
   }
-
 
   Future<void> _initializeGuestStatus() async {
     isGuest = await _deviceService.checkGuestStatus();
@@ -152,7 +150,7 @@ class _GuestHomeScreenState extends ConsumerState<GuestHomeScreen> {
   Future<void> _loadUserType() async {
     bool userType = await _userService.getUserType();
     setState(() {
-      isPremium = userType;
+      isNotPremium = userType;
     });
   }
 
@@ -200,34 +198,32 @@ class _GuestHomeScreenState extends ConsumerState<GuestHomeScreen> {
     ref.listen<int>(timerProvider, (previous, next) {
       setState(() {});
     });
+    if (isGuest || isNotPremium) {
+      ref.listen<int>(timerProvider, (previous, next) {
+        if (ref.watch(timerProvider.notifier).shouldShowAd) {
+          _showAdDialog();
+          ref.read(timerProvider.notifier).resetAdFlag();
+        }
+      });
+    }
 
-    ref.listen<int>(timerProvider, (previous, next) {
-      if (ref.watch(timerProvider.notifier).shouldShowAd) {
-        _showAdDialog();
-        ref.read(timerProvider.notifier).resetAdFlag();
-      }
-    });
-
-    if(isGuest){
-      ref.listen<int>(timerProvider, (previous,  next) {
+    if (isGuest) {
+      print("ki value $isGuest");
+      ref.listen<int>(timerProvider, (previous, next) {
         if (ref.read(timerProvider.notifier).signUpDialogShow) {
           showSignUpDialog(context);
           ref.read(timerProvider.notifier).resetAdFlag();
         }
       });
     }
-    if(!isPremium){
-      ref.listen<int>(timerProvider, (previous,  next) {
+    if (isNotPremium) {
+      ref.listen<int>(timerProvider, (previous, next) {
         if (ref.read(timerProvider.notifier).normalSignUpDialogShow) {
-          showSignUpDialog(context);
+          normalUserRestrictionUpDialog(context);
           ref.read(timerProvider.notifier).resetAdFlag();
         }
       });
     }
-
-
-
-
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -383,8 +379,10 @@ class _GuestHomeScreenState extends ConsumerState<GuestHomeScreen> {
                 ),
               ),
               SizedBox(height: 16.h),
-              if (!isPremium) ...[ SizedBox(height: 50.h),],
-              if (isPremium) ...[
+              if (!isNotPremium) ...[
+                SizedBox(height: 50.h),
+              ],
+              if (isNotPremium) ...[
                 Transform.translate(
                   offset: Offset(0, -170.h),
                   child: Container(

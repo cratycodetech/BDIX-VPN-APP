@@ -10,6 +10,7 @@ class UserService {
   Future<bool> getUserType() async {
     final prefs = await SharedPreferences.getInstance();
     final userType = prefs.getString('userType');
+    print("User type $userType");
     if(userType==null)
       {
         return true;

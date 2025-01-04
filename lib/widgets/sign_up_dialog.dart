@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../controllers/openvpn_controller.dart';
 
@@ -16,7 +17,9 @@ void showSignUpDialog(BuildContext context) async {
         content: const Text('To continue using the app, please sign up.'),
         actions: [
           TextButton(
-            onPressed: () {
+            onPressed: () async {
+              SharedPreferences prefs = await SharedPreferences.getInstance();
+              await prefs.remove('guest_device_id');
               vpnController.disconnect();
               Navigator.pop(context, true);
               Get.toNamed('/signIn');
@@ -29,6 +32,8 @@ void showSignUpDialog(BuildContext context) async {
   );
 
   if (result == null) {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.remove('guest_device_id');
     vpnController.disconnect();
     Get.toNamed('/signIn');
   }

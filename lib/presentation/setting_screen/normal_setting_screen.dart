@@ -23,7 +23,7 @@ class _NormalSettingScreenState extends State<NormalSettingScreen> {
 
   void _onItemTapped(int index) {
     setState(() {
-      _currentIndex = index; // Update the selected index
+      _currentIndex = index;
     });
   }
 

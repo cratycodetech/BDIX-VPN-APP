@@ -25,6 +25,23 @@ class AuthService {
     }
   }
 
+  Future<void> sendOTPForForgetPassword({
+    required String email,
+  }) async {
+    final url = Uri.parse('$baseUrl/api/v1/auth//forget-password');
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'email': email,
+      }),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to send OTP: ${response.body}');
+    }
+  }
+
   Future<void> verifyOtp({
     required String email,
     required String otp,
@@ -44,9 +61,30 @@ class AuthService {
     }
   }
 
+  Future<void> resetPassword({
+    required String email,
+    required String newPassword,
+  }) async {
+    final url = Uri.parse('$baseUrl/api/v1/auth//reset-password-app"');
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'email': email,
+        'newPassword': newPassword,
+        'confirmPassword' : newPassword,
+      }),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to verify OTP: ${response.body}');
+    }
+  }
+
   Future<void> signUp({
     required String email,
     required String password,
+    required bool flag,
   }) async {
     final url = Uri.parse('$baseUrl/api/v1/auth/signup');
     final response = await http.post(
@@ -55,6 +93,7 @@ class AuthService {
       body: jsonEncode({
         'email': email,
         'password': password,
+        'flag' : flag
       }),
     );
 

@@ -1,7 +1,9 @@
+import 'package:bdix_vpn/service/api/user_remote_service.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../routes/routes.dart';
+import '../../service/api/auth_service.dart';
 import '../../utils/validation_utils.dart';
 
 void main() {
@@ -30,12 +32,14 @@ class ForgetPasswordScreen extends StatefulWidget {
 class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
   final TextEditingController emailController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-
-  // Variable for radio button selection
-  String selectedOption = "Send Link";
+  final AuthService _authService = AuthService();
+  final arguments = Get.arguments as Map<String, dynamic>?;
+  final UserRemoteService _userRemoteService = UserRemoteService();
 
   @override
   Widget build(BuildContext context) {
+    final fromProfilePage = arguments?['fromProfilePage'] ?? false;
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -116,51 +120,8 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
                   ),
                   validator: (value) => ValidationUtils.validateEmail(value),
                 ),
-                const SizedBox(height: 20),
-                // "What do you prefer?" Text
-                const Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    'What do you prefer?',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.black,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                // Radio Buttons
-                Row(
-                  children: [
-                    Expanded(
-                      child: RadioListTile<String>(
-                        title: const Text('Send Link'),
-                        value: "Send Link",
-                        groupValue: selectedOption,
-                        onChanged: (value) {
-                          setState(() {
-                            selectedOption = value!;
-                          });
-                        },
-                      ),
-                    ),
-                    Expanded(
-                      child: RadioListTile<String>(
-                        title: const Text('Send OTP'),
-                        value: "Send OTP",
-                        groupValue: selectedOption,
-                        onChanged: (value) {
-                          setState(() {
-                            selectedOption = value!;
-                          });
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 40),
-                // Send Reset Link Button
+                const SizedBox(height: 30),
+
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
@@ -171,15 +132,100 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
                         borderRadius: BorderRadius.circular(10),
                       ),
                     ),
-                    onPressed: () {
-                      if (_formKey.currentState!.validate()) {
-                        // Form is valid, proceed based on selected option
-                        if (selectedOption == "Send Link") {
-                          Get.toNamed(AppRoutes.forgotPassword2);
-                        } else if (selectedOption == "Send OTP") {
-                          Get.toNamed(
-                            AppRoutes.signUpOTP,
-                            arguments: {'email': emailController.text},
+                    onPressed: () async {
+                      if (!fromProfilePage) {
+                        final emailError =
+                            ValidationUtils.validateEmail(emailController.text);
+                        if (emailError == null) {
+                          try {
+                            await _authService.sendOTP(
+                                email: emailController.text);
+
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  'OTP sent successfully!',
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                                backgroundColor: Colors.green,
+                                duration: Duration(seconds: 2),
+                              ),
+                            );
+                            Get.toNamed(
+                              AppRoutes.signUpOTP,
+                              arguments: {
+                                'email': emailController.text,
+                                'isForgetPassword': true,
+                              },
+                            );
+                          } catch (e) {
+                            Navigator.of(context).pop();
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  "Email is not registered, try with registered one",
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                                backgroundColor: Colors.red,
+                                duration: Duration(seconds: 2),
+                              ),
+                            );
+                          }
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                emailError,
+                                style: const TextStyle(color: Colors.white),
+                              ),
+                              backgroundColor: Colors.red,
+                              duration: const Duration(seconds: 2),
+                            ),
+                          );
+                        }
+                      } else {
+                        final emailError =
+                            ValidationUtils.validateEmail(emailController.text);
+                        if (emailError == null) {
+                          try {
+                            await _userRemoteService.updateEmail(email: emailController.text);
+
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  'Email is updated successfully!',
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                                backgroundColor: Colors.green,
+                                duration: Duration(seconds: 2),
+                              ),
+                            );
+                            Get.toNamed(
+                              AppRoutes.normalLoginProfileScreen,
+                            );
+                          } catch (e) {
+                            Navigator.of(context).pop();
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  "Email is not registered, try with registered one",
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                                backgroundColor: Colors.red,
+                                duration: Duration(seconds: 2),
+                              ),
+                            );
+                          }
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                emailError,
+                                style: const TextStyle(color: Colors.white),
+                              ),
+                              backgroundColor: Colors.red,
+                              duration: const Duration(seconds: 2),
+                            ),
                           );
                         }
                       }

@@ -1,9 +1,14 @@
+import 'package:bdix_vpn/presentation/sign_up_screen/signUp_passWord_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:get/get.dart';
+import 'package:get/get_core/src/get_main.dart';
 import '../../models/user.dart';
 import '../../service/api/user_remote_service.dart';
 import '../../widgets/bottomNavigationBar_widget.dart';
+import '../forgot_password/forgot_password.dart';
 
 class NormalLoginProfileScreen extends StatefulWidget {
   const NormalLoginProfileScreen({super.key});
@@ -15,6 +20,46 @@ class NormalLoginProfileScreen extends StatefulWidget {
 class _NormalLoginProfileScreenState extends State<NormalLoginProfileScreen> {
   late int _currentIndex = 0;
   late Future<User> _userFuture;
+
+  bool isCheckedForId = false;
+  bool isCheckedForEmail = false;
+
+  void _onCheckboxChangedForId(bool? value, String userId) {
+    if (value != null) {
+      setState(() {
+        isCheckedForId = value;
+      });
+
+      if (isCheckedForId) {
+        Clipboard.setData(ClipboardData(text: userId));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Copied: $userId'),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    }
+  }
+
+  void _onCheckboxChangedForEmail(bool? value, String userId) {
+    if (value != null) {
+      setState(() {
+        isCheckedForEmail = value;
+      });
+
+      if (isCheckedForEmail) {
+        Clipboard.setData(ClipboardData(text: userId));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Copied: $userId'),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    }
+  }
+
 
   @override
   void initState() {
@@ -33,7 +78,7 @@ class _NormalLoginProfileScreenState extends State<NormalLoginProfileScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       body: Padding(
-        padding: EdgeInsets.all(16.0.w),  // Using ScreenUtil to scale padding
+        padding: EdgeInsets.all(16.0.w),
         child: FutureBuilder<User>(
           future: _userFuture,
           builder: (context, snapshot) {
@@ -66,21 +111,17 @@ class _NormalLoginProfileScreenState extends State<NormalLoginProfileScreen> {
                     ),
                     const Spacer(),
                     Text(
-                      user.userId.toString(), // Displaying fetched user ID
+                      user.userId.toString(),
                       style: const TextStyle(
                           color: Colors.grey,
                           fontSize: 14,
                           fontWeight: FontWeight.bold),
                     ),
                     const Spacer(),
-                    SvgPicture.asset(
-                      'assets/images/pencil.svg',
-                      height: 15.h, // Scale height
-                      width: 16.67.w, // Scale width
-                    ),
-                    const Checkbox(
-                      value: false,
-                      onChanged: null,
+
+                    Checkbox(
+                      value: isCheckedForId,
+                      onChanged: (value) => _onCheckboxChangedForId(value, user.userId.toString()),
                     ),
                   ],
                 ),
@@ -100,8 +141,8 @@ class _NormalLoginProfileScreenState extends State<NormalLoginProfileScreen> {
                     const Spacer(),
                     Text(
                       user.email.length > 15
-                          ? '${user.email.substring(0, 15)}...'  // Truncate email to 20 characters and add "..."
-                          : user.email, // Show the full email if it's short
+                          ? '${user.email.substring(0, 15)}...'
+                          : user.email,
                       style: const TextStyle(
                         color: Colors.grey,
                         fontSize: 14,
@@ -110,14 +151,22 @@ class _NormalLoginProfileScreenState extends State<NormalLoginProfileScreen> {
                     ),
                     const Spacer(),
                     SizedBox(width: 60.w), // Scale width
-                    SvgPicture.asset(
-                      'assets/images/pencil.svg',
-                      height: 15.h, // Scale height
-                      width: 16.67.w, // Scale width
+                    GestureDetector(
+                      onTap: () {
+                        Get.to(
+                              () => const ForgetPasswordApp(),
+                          arguments: {'fromProfilePage': true},
+                        );
+                      },
+                      child: SvgPicture.asset(
+                        'assets/images/pencil.svg',
+                        height: 15.h, // Scale height
+                        width: 16.67.w, // Scale width
+                      ),
                     ),
-                    const Checkbox(
-                      value: false,
-                      onChanged: null,
+                    Checkbox(
+                      value: isCheckedForEmail,
+                      onChanged: (value) => _onCheckboxChangedForEmail(value, user.email.toString()),
                     ),
                   ],
                 ),
@@ -135,21 +184,27 @@ class _NormalLoginProfileScreenState extends State<NormalLoginProfileScreen> {
                           fontWeight: FontWeight.bold),
                     ),
                     const Spacer(),
-                    Text(
-                      user.password.length > 15
-                          ? '${user.password.substring(0, 15)}...'  // Truncate email to 20 characters and add "..."
-                          : user.password,
-                      style: const TextStyle(
+                    const Text(
+                     "******",
+                      style: TextStyle(
                           color: Colors.grey,
                           fontSize: 14,
                           fontWeight: FontWeight.bold),
                     ),
                     const Spacer(),
                     SizedBox(width: 70.w), // Scale width
-                    SvgPicture.asset(
-                      'assets/images/pencil.svg',
-                      height: 15.h, // Scale height
-                      width: 16.67.w, // Scale width
+                    GestureDetector(
+                      onTap: () {
+                        Get.to(
+                              () => const SignUp6(),
+                          arguments: {'fromProfilePage': true},
+                        );
+                      },
+                      child: SvgPicture.asset(
+                        'assets/images/pencil.svg',
+                        height: 15.h, // Scale height
+                        width: 16.67.w, // Scale width
+                      ),
                     ),
                     const Checkbox(
                       value: false,
@@ -292,21 +347,21 @@ class _NormalLoginProfileScreenState extends State<NormalLoginProfileScreen> {
                         ),
                       ),
                       SizedBox(height: 200.h), // Scale height
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          SvgPicture.asset(
-                            'assets/images/recycle.svg',
-                            height: 15.h, // Scale height
-                            width: 16.67.w, // Scale width
-                          ),
-                          SizedBox(width: 16.w), // Scale width
-                          const Text(
-                            'Restore',
-                            style: TextStyle(color: Colors.black),
-                          ),
-                        ],
-                      ),
+                      // Row(
+                      //   mainAxisAlignment: MainAxisAlignment.center,
+                      //   children: [
+                      //     SvgPicture.asset(
+                      //       'assets/images/recycle.svg',
+                      //       height: 15.h, // Scale height
+                      //       width: 16.67.w, // Scale width
+                      //     ),
+                      //     SizedBox(width: 16.w), // Scale width
+                      //     const Text(
+                      //       'Restore',
+                      //       style: TextStyle(color: Colors.black),
+                      //     ),
+                      //   ],
+                      // ),
                     ],
                   ),
                 ),
