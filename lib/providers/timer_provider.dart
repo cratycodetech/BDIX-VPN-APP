@@ -6,9 +6,15 @@ class TimerNotifier extends StateNotifier<int> {
 
   Timer? _timer;
   bool _adTriggered = false;
-  bool _adShownForSession = false;  // Flag to track if the ad has been shown for this session
+  bool _adShownForSession = false;
+  bool _dialogTriggered = false;
+  bool _normalDialogTriggered = false;
 
-  bool get shouldShowAd => !_adTriggered && state == 35900 && !_adShownForSession; // Show ad after 10 seconds if not shown in this session
+
+  bool get shouldShowAd => !_adTriggered && state == 35900 && !_adShownForSession;
+  bool get signUpDialogShow => _dialogTriggered;
+  bool get normalSignUpDialogShow => _normalDialogTriggered;
+
 
   void startTimer() {
     if (_timer != null) return;
@@ -20,15 +26,24 @@ class TimerNotifier extends StateNotifier<int> {
         // Check for ad trigger
         if (state == 3590 && !_adTriggered && !_adShownForSession) {
           _adTriggered = true;
-          _adShownForSession = true;  // Mark that the ad has been shown for this session
+          _adShownForSession = true;
         }
       } else {
         _timer?.cancel();
       }
+
+      if (state == 3595 && !_dialogTriggered) {
+        _dialogTriggered = true;
+      }
+
+      if (state == 3580 && !_dialogTriggered) {
+        _normalDialogTriggered  = true;
+      }
+
     });
   }
 
-  // Dispose of the timer
+
   @override
   void dispose() {
     _timer?.cancel();
@@ -36,13 +51,25 @@ class TimerNotifier extends StateNotifier<int> {
   }
 
   void addExtraTime(int seconds) {
-    state += seconds; // Add the specified seconds to the current state
+    state += seconds;
   }
 
-  // Reset session ad flag (if needed to track across multiple app restarts)
+
   void resetAdFlag() {
     _adShownForSession = false;
     _adTriggered = false;
+    _dialogTriggered = false;
+    _normalDialogTriggered = false;
+  }
+
+  void stopTimer() {
+    _timer?.cancel();
+    _timer = null;
+  }
+
+  void resetTimer() {
+    stopTimer();
+    state = 3600;
   }
 }
 

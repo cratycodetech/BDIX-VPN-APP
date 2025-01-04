@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:get/get.dart';
+import 'package:get/get_core/src/get_main.dart';
 
+import '../../routes/routes.dart';
 import '../../widgets/bottomNavigationBar_widget.dart';
 
 class GuestProfileScreen extends StatefulWidget {
@@ -73,7 +76,7 @@ class _GuestProfileScreenState extends State<GuestProfileScreen> {
                   borderRadius: BorderRadius.circular(18.r),
                 ),
               ),
-              onPressed: () {},
+              onPressed: () {Get.toNamed(AppRoutes.signIn);},
               child: Text(
                 'SIGN UP',
                 style: TextStyle(

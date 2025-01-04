@@ -1,17 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+
+import '../controllers/openvpn_controller.dart';
 
 class DisconnectDialog extends StatelessWidget {
   const DisconnectDialog({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final vpnController = Get.find<OpenVPNController>();
     return AlertDialog(
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.all(Radius.circular(0)),
       ),
       content: const Text(
         'Would you like to disconnect?',
-        style: TextStyle(fontSize: 20),
+        style: TextStyle(fontSize: 18),
       ),
       actions: [
         Row(
@@ -34,7 +38,8 @@ class DisconnectDialog extends StatelessWidget {
             const SizedBox(width: 50,),
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop();
+                vpnController.disconnect();
+                Navigator.of(context).pop(true);
               },
               child: const Text(
                 'DISCONNECT',

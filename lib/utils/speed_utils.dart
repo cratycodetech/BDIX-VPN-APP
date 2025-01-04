@@ -14,7 +14,20 @@ class Speed {
   String uploadSpeedKB = "0.00 KB/s";
   String downloadSpeedKB = "0.00 KB/s";
 
+  int sessionStartBytesSent = 0;
+  int sessionStartBytesReceived = 0;
+  late int sessionDataUsedBytes ;
+
+
+
   Future<void> startMonitoring() async {
+
+    final Map<Object?, Object?> trafficStats = await platform.invokeMethod('getTrafficStats');
+    final Map<String, dynamic> castedTrafficStats = Map<String, dynamic>.from(trafficStats);
+
+    sessionStartBytesSent = castedTrafficStats['bytesSent'] ?? 0;
+    sessionStartBytesReceived = castedTrafficStats['bytesReceived'] ?? 0;
+
     _timer = Timer.periodic(const Duration(seconds: 1), (_) async {
       await updateTrafficStats();
     });
@@ -22,6 +35,16 @@ class Speed {
 
   Future<void> stopMonitoring() async {
     _timer?.cancel();
+    final Map<Object?, Object?> trafficStats = await platform.invokeMethod('getTrafficStats');
+    final Map<String, dynamic> castedTrafficStats = Map<String, dynamic>.from(trafficStats);
+
+    int sessionEndBytesSent = castedTrafficStats['bytesSent'] ?? 0;
+    int sessionEndBytesReceived = castedTrafficStats['bytesReceived'] ?? 0;
+
+    sessionDataUsedBytes = (sessionEndBytesSent - sessionStartBytesSent) +
+        (sessionEndBytesReceived - sessionStartBytesReceived);
+
+    print('Data used this session: ${sessionDataUsedBytes / 1} KB');
   }
 
   Future<void> updateTrafficStats() async {
@@ -32,13 +55,20 @@ class Speed {
       int currentSent = castedTrafficStats['bytesSent'] ?? 0;
       int currentReceived = castedTrafficStats['bytesReceived'] ?? 0;
 
+      if (previousSent == 0 && previousReceived == 0) {
+        previousSent = currentSent;
+        previousReceived = currentReceived;
+        return;
+      }
+
+
       int uploadSpeed = currentSent - previousSent;
       int downloadSpeed = currentReceived - previousReceived;
 
       previousSent = currentSent;
       previousReceived = currentReceived;
 
-      // Update the bytesSent and bytesReceived to reflect new values
+
       bytesSent = currentSent;
       bytesReceived = currentReceived;
 

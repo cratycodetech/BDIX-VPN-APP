@@ -1,6 +1,8 @@
+import 'package:bdix_vpn/service/user_service.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 
+import '../../models/user_preferences.dart';
+import '../../service/database/database_helper.dart';
 import '../../widgets/bottomNavigationBar_widget.dart';
 
 class PremiumSettingScreen extends StatefulWidget {
@@ -12,19 +14,82 @@ class PremiumSettingScreen extends StatefulWidget {
 
 class _PremiumSettingScreenState extends State<PremiumSettingScreen> {
   int? _selectedValue = 0;
-  bool _isToggled = false;
   late int _currentIndex = 0;
+  final UserService _userService = UserService();
+  bool _isKillSwitchToggled = false;
+  bool _isConnectOnStartToggled = false;
+  bool _isShowNotificationToggled = false;
+
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _currentIndex = index;
+    });
+  }
+
+
+  void _toggleSwitch(int switchType, bool value) {
+    setState(() {
+      switch (switchType) {
+        case 0:
+          _isKillSwitchToggled = value;
+          break;
+        case 1:
+          _isConnectOnStartToggled = value;
+          break;
+        case 2:
+          _isShowNotificationToggled = value;
+          break;
+      }
+      _savePreferences();
+    });
+  }
+
+
+  void _savePreferences() async {
+    final userId = await _userService.getUserId();
+    if (userId == null) {
+      throw Exception("User ID cannot be null");
+    }
+    UserPreferences preferences = UserPreferences(
+      userID: userId,
+      openVPN: _selectedValue == 1,
+      ipSec: _selectedValue == 0,
+      issr: _selectedValue == 2,
+      blockInternet: _isKillSwitchToggled,
+      connectOnStart: _isConnectOnStartToggled,
+      showNotification: _isShowNotificationToggled,
+    );
+    await DatabaseHelper().insertUserPreferences(preferences);
+  }
+
 
   void _handleRadioValueChange(int? value) {
     setState(() {
       _selectedValue = value;
+      _savePreferences();
     });
   }
 
-  void _onItemTapped(int index) {
-    setState(() {
-      _currentIndex = index; // Update the selected index
-    });
+  void _loadPreferences() async {
+    final userId = await _userService.getUserId();
+    if (userId != null) {
+      UserPreferences? preferences = await DatabaseHelper().getUserPreferences(userId);
+      if (preferences != null) {
+        setState(() {
+          _selectedValue = preferences.ipSec ? 0 : (preferences.openVPN ? 1 : 2);
+          _isKillSwitchToggled = preferences.blockInternet;
+          _isConnectOnStartToggled = preferences.connectOnStart;
+          _isShowNotificationToggled = preferences.showNotification;
+        });
+      }
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPreferences();
   }
 
   @override
@@ -129,12 +194,8 @@ class _PremiumSettingScreenState extends State<PremiumSettingScreen> {
                 Transform.scale(
                   scale: 0.8, // Adjust the scale factor to resize the Switch
                   child: Switch(
-                    value: _isToggled,
-                    onChanged: (bool value) {
-                      setState(() {
-                        _isToggled = value;
-                      });
-                    },
+                    value:  _isKillSwitchToggled,
+                    onChanged:  (value) => _toggleSwitch(0, value)
                   ),
                 ),
                 const SizedBox(
@@ -185,44 +246,14 @@ class _PremiumSettingScreenState extends State<PremiumSettingScreen> {
                 Transform.scale(
                   scale: 0.8, // Adjust the scale factor to resize the Switch
                   child: Switch(
-                    value: _isToggled,
-                    onChanged: (bool value) {
-                      setState(() {
-                        _isToggled = value;
-                      });
-                    },
+                    value: _isConnectOnStartToggled,
+                    onChanged: (value) => _toggleSwitch(1, value)
                   ),
                 ),
                 const SizedBox(
                   width: 8,
                 ),
               ],
-            ),
-            Row(
-              children: [
-                const Text(
-                  'Connection duration boost',
-                  style: TextStyle(fontSize: 18, color: Colors.black),
-                ),
-                const Spacer(),
-                Transform.scale(
-                  scale: 0.8, // Adjust the scale factor to resize the Switch
-                  child: Switch(
-                    value: _isToggled,
-                    onChanged: (bool value) {
-                      setState(() {
-                        _isToggled = value;
-                      });
-                    },
-                  ),
-                ),
-                const SizedBox(
-                  width: 8,
-                ),
-              ],
-            ),
-            const SizedBox(
-              height: 8,
             ),
             const Center(
               child: SizedBox(
@@ -259,20 +290,18 @@ class _PremiumSettingScreenState extends State<PremiumSettingScreen> {
             ),
             Row(
               children: [
-                const Text(
-                  'Show notification when Prime VPN is \nnot connected ',
-                  style: TextStyle(fontSize: 18, color: Colors.black),
+                const Expanded(
+                  child: Text(
+                    'Show notification when Prime VPN is not connected ',
+                    style: TextStyle(fontSize: 18, color: Colors.black),
+                  ),
                 ),
                 const Spacer(),
                 Transform.scale(
                   scale: 0.8, // Adjust the scale factor to resize the Switch
                   child: Switch(
-                    value: _isToggled,
-                    onChanged: (bool value) {
-                      setState(() {
-                        _isToggled = value;
-                      });
-                    },
+                    value: _isShowNotificationToggled,
+                    onChanged: (value) => _toggleSwitch(2, value)
                   ),
                 ),
                 const SizedBox(

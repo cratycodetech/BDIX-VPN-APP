@@ -36,12 +36,12 @@ class RewardedAdManager {
     _rewardedAd!.fullScreenContentCallback = FullScreenContentCallback(
       onAdDismissedFullScreenContent: (ad) {
         ad.dispose();
-        _rewardedAd = null; // Reset after use
+        _rewardedAd = null;
       },
       onAdFailedToShowFullScreenContent: (ad, error) {
-        print('Ad failed to show: $error'); // Log the error
+        print('Ad failed to show: $error');
         ad.dispose();
-        _rewardedAd = null; // Reset after failure
+        _rewardedAd = null;
       },
     );
 

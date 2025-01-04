@@ -5,7 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../routes/routes.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 
-import '../../service/auth_service.dart';
+import '../../service/api/auth_service.dart';
 
 
 void main() {
@@ -170,7 +170,7 @@ class WelcomeScreen extends StatelessWidget {
                 } finally {
                   // Dismiss the loading dialog
                   Navigator.of(context).pop();
-
+                  Get.toNamed(AppRoutes.guestHome);
                 }
               } else {
                 print('Failed to retrieve device ID');

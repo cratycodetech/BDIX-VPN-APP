@@ -5,9 +5,11 @@ import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../routes/routes.dart';
-import '../../service/auth_service.dart';
+import '../../service/api/auth_service.dart';
+import '../../service/device_service.dart';
 import '../../service/user_service.dart';
 import '../../widgets/bottomNavigationBar_widget.dart';
+import '../../widgets/disconnect_dialog_box.dart';
 
 class GuestSettingScreen extends StatefulWidget {
   const GuestSettingScreen({super.key});
@@ -23,11 +25,14 @@ class _GuestSettingScreenState extends State<GuestSettingScreen> {
   final AuthService _authService = AuthService();
   bool isGuest = false;
   final UserService _userService = UserService();
+  final DeviceService _deviceService = DeviceService();
+
 
   @override
   void initState() {
     super.initState();
-    _checkGuestStatus();
+    _initializeGuestStatus();
+    print("isGuest $isGuest");
   }
 
 
@@ -43,35 +48,33 @@ class _GuestSettingScreenState extends State<GuestSettingScreen> {
     });
   }
 
-  Future<void> _logout() async {
-    try {
-      await _userService.removeUserType();
-      await _authService.logout();
-      Get.toNamed(AppRoutes.signIn);
-    } catch (e) {
-      Get.snackbar(
-        'Error',
-        'Logout failed. Please try again.',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
+  Future<void> _logout(BuildContext context) async {
+    final shouldDisconnect = await showDialog<bool>(
+      context: context,
+      builder: (context) => const DisconnectDialog(),
+    );
+
+    if (shouldDisconnect == true) {
+      try {
+        await _userService.removeUserType();
+        await _authService.logout();
+        Get.toNamed(AppRoutes.signIn);
+      } catch (e) {
+        Get.snackbar(
+          'Error',
+          'Logout failed. Please try again.',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+      }
     }
   }
 
-  Future<void> _checkGuestStatus() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? deviceId = prefs.getString('guest_device_id');
 
-    if (deviceId != null) {
-      setState(() {
-        isGuest = true; // User is a guest, hide the logout button
-      });
-    } else {
-      setState(() {
-        isGuest = false; // User is not a guest, show the logout button
-      });
-    }
+  Future<void> _initializeGuestStatus() async {
+
+    setState(() async {isGuest = await _deviceService.checkGuestStatus();});
   }
 
 
@@ -314,7 +317,8 @@ class _GuestSettingScreenState extends State<GuestSettingScreen> {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            //if (!isGuest)
+
+            if (!isGuest)
             Row(
               children: [
                 Text(
@@ -325,7 +329,7 @@ class _GuestSettingScreenState extends State<GuestSettingScreen> {
                 SizedBox(height: 44.h),
                 IconButton(
                   icon: const Icon(Icons.logout),
-                  onPressed: _logout ,
+                  onPressed: () => _logout(context),
                 ),
               ],
             ),

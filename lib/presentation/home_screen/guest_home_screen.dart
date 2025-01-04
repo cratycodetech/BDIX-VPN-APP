@@ -8,12 +8,18 @@ import 'package:openvpn_flutter/openvpn_flutter.dart';
 import '../../advertisment/reworded_ad.dart';
 import '../../controllers/openvpn_controller.dart';
 import '../../routes/routes.dart';
+import '../../service/database/database_helper.dart';
+import '../../service/device_service.dart';
 import '../../service/user_service.dart';
 import '../../utils/speed_utils.dart';
 import '../../widgets/bottomNavigationBar_widget.dart';
 import '../../widgets/rewarded_ad_dialog.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/timer_provider.dart';
+import '../../widgets/sign_up_dialog.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+
 
 class GuestHomeScreen extends ConsumerStatefulWidget {
   final OpenVPN engine;
@@ -32,7 +38,12 @@ class _GuestHomeScreenState extends ConsumerState<GuestHomeScreen> {
   Duration get remainingTime => Duration(seconds: ref.watch(timerProvider));
   final Speed _speed = Speed();
   final UserService _userService = UserService();
+  final DeviceService _deviceService = DeviceService();
   bool isPremium = false;
+  bool isGuest = false;
+  DateTime? sessionStartTime;
+  DateTime? sessionEndTime;
+
 
   void _onItemTapped(int index) {
     setState(() {
@@ -41,7 +52,30 @@ class _GuestHomeScreenState extends ConsumerState<GuestHomeScreen> {
   }
 
   Future<void> _disconnectVPN() async {
+    sessionEndTime = DateTime.now();
+    _speed.stopMonitoring();
+
+    int dataUsedBytes = _speed.sessionDataUsedBytes;
+
+    print('Data use in guest $dataUsedBytes');
+
+
+    final dbHelper = DatabaseHelper();
+    await dbHelper.insertSession(
+      sessionStartTime.toString(),
+      sessionEndTime.toString(),
+      dataUsedBytes,
+    );
+
+    ref.read(timerProvider.notifier).resetTimer();
     try {
+
+      String publicIP = "Unknown";
+      final response = await http.get(Uri.parse('https://api64.ipify.org?format=json'));
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        publicIP = data['ip'] ?? "Unknown";
+      }
       print('Disconnecting VPN...');
 
       // Access the OpenVPNController instance
@@ -57,16 +91,18 @@ class _GuestHomeScreenState extends ConsumerState<GuestHomeScreen> {
       }
 
       // Disconnect the VPN using OpenVPNController
-      vpnController.engine.disconnect();
+      vpnController.disconnect();
       vpnController.isConnected.value = false;
       vpnController.vpnStage.value = "Disconnected";
 
       print('VPN Disconnected.');
 
-      // Navigate back to GuestHome using Get
       if (mounted) {
-        Get.offNamed(AppRoutes
-            .guestHome); // Use Get.offNamed to replace the current screen
+        // Pass the public IP as an argument during navigation
+        Get.offNamed(
+          AppRoutes.connectionReportScreen,
+          arguments: {'publicIP': publicIP},
+        );
       }
     } catch (error) {
       print('Error disconnecting VPN: $error');
@@ -94,14 +130,23 @@ class _GuestHomeScreenState extends ConsumerState<GuestHomeScreen> {
     _rewardedAdManager = RewardedAdManager();
     _loadRewardedAd();
     ref.read(timerProvider.notifier).startTimer();
+    _speed.startMonitoring();
     _startTrafficStatsUpdate();
     _loadUserType();
+    _initializeGuestStatus();
+    sessionStartTime = DateTime.now();
   }
 
   @override
   void dispose() {
     _dialogTimer.cancel();
     super.dispose();
+  }
+
+
+  Future<void> _initializeGuestStatus() async {
+    isGuest = await _deviceService.checkGuestStatus();
+    setState(() {});
   }
 
   Future<void> _loadUserType() async {
@@ -114,7 +159,7 @@ class _GuestHomeScreenState extends ConsumerState<GuestHomeScreen> {
   void _startTrafficStatsUpdate() {
     Timer.periodic(const Duration(seconds: 1), (timer) {
       _speed.updateTrafficStats();
-      setState(() {}); // Trigger UI update after updating traffic stats
+      setState(() {});
     });
   }
 
@@ -123,7 +168,7 @@ class _GuestHomeScreenState extends ConsumerState<GuestHomeScreen> {
       context: context,
       builder: (context) {
         return RewardedAdDialog(
-          onWatchAd: _showRewardedAd, // Pass the callback to add time
+          onWatchAd: _showRewardedAd,
         );
       },
     );
@@ -132,13 +177,13 @@ class _GuestHomeScreenState extends ConsumerState<GuestHomeScreen> {
   void _showRewardedAd() {
     _rewardedAdManager.showRewardedAd(
       context: context,
-      onRewardEarned: _addExtraTime, // Callback for reward
+      onRewardEarned: _addExtraTime,
     );
   }
 
   void _addExtraTime() {
     setState(() {
-      ref.read(timerProvider.notifier).addExtraTime(300); // Add 5 minutes
+      ref.read(timerProvider.notifier).addExtraTime(300);
     });
   }
 
@@ -162,6 +207,27 @@ class _GuestHomeScreenState extends ConsumerState<GuestHomeScreen> {
         ref.read(timerProvider.notifier).resetAdFlag();
       }
     });
+
+    if(isGuest){
+      ref.listen<int>(timerProvider, (previous,  next) {
+        if (ref.read(timerProvider.notifier).signUpDialogShow) {
+          showSignUpDialog(context);
+          ref.read(timerProvider.notifier).resetAdFlag();
+        }
+      });
+    }
+    if(!isPremium){
+      ref.listen<int>(timerProvider, (previous,  next) {
+        if (ref.read(timerProvider.notifier).normalSignUpDialogShow) {
+          showSignUpDialog(context);
+          ref.read(timerProvider.notifier).resetAdFlag();
+        }
+      });
+    }
+
+
+
+
 
     return Scaffold(
       backgroundColor: Colors.white,

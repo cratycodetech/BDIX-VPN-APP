@@ -48,16 +48,16 @@ class BottomNavBar extends StatelessWidget {
   void _handleTap(BuildContext context, int index) {
     switch (index) {
       case 0:
-        Get.toNamed(AppRoutes.guestHomeScreen);
+        Get.toNamed(AppRoutes.guestHome);
         break;
       case 1:
         Get.toNamed(AppRoutes.guestServerScreen);
         break;
       case 2:
-        Get.toNamed(AppRoutes.guestProfileScreen);
+        Get.toNamed(AppRoutes.normalLoginProfileScreen);
         break;
       case 3:
-        Get.toNamed(AppRoutes.guestSettingScreen);
+        Get.toNamed(AppRoutes.premiumSettingScreen);
         break;
       default:
         print('Unknown item tapped');

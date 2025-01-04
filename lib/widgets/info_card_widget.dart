@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 
 class InfoCard extends StatelessWidget {
-  const InfoCard({super.key});
+  final String duration;
+  final String dataUsed;
+  final String publicIP;
+
+  const InfoCard({super.key, required this.duration, required this.dataUsed, required this.publicIP});
 
   @override
   Widget build(BuildContext context) {
@@ -26,17 +30,17 @@ class InfoCard extends StatelessWidget {
           _infoItem(
             icon: Icons.language,
             label: 'France',
-            value: '128.15.37.1',
+            value: publicIP,
           ),
           _infoItem(
             icon: Icons.timer,
             label: 'Duration',
-            value: '00:15:16',
+            value: duration,
           ),
           _infoItem(
             icon: Icons.data_usage,
             label: 'Data Used',
-            value: '33.4 Mbit',
+            value: dataUsed,
           ),
         ],
       ),

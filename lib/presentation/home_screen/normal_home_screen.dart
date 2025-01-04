@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../models/user_preferences.dart';
+import '../../service/database/database_helper.dart';
 import '../../service/user_service.dart';
 import '../../widgets/bottomNavigationBar_widget.dart';
 import '../../widgets/topAppBar_widget.dart';
@@ -16,7 +18,7 @@ class GuestHome extends StatefulWidget {
 
 class _GuestHomeState extends State<GuestHome> {
   final OpenVPNController vpnController =
-  Get.find<OpenVPNController>(); // Access the OpenVPNController
+  Get.find<OpenVPNController>();
   final UserService _userService = UserService();
   bool isPremium = false;
 
@@ -28,6 +30,7 @@ class _GuestHomeState extends State<GuestHome> {
     _loadConfig();
     _observeConnection();
     _loadUserType();
+    _conditionalStartVPN();
   }
 
   Future<void> _loadUserType() async {
@@ -49,6 +52,20 @@ class _GuestHomeState extends State<GuestHome> {
         Future.microtask(() => Get.off(() => GuestHomeScreen(engine: vpnController.engine)));
       }
     });
+  }
+
+  Future<void> _conditionalStartVPN() async {
+    try{
+      final DatabaseHelper dbHelper = DatabaseHelper();
+      final String? userId = await _userService.getUserId();
+      final UserPreferences? preferences = await dbHelper.getUserPreferences(userId!);
+
+      if (preferences?.connectOnStart == true){
+        vpnController.connect();
+      }
+    } catch (e) {
+      print("Error starting VPN: $e");
+    }
   }
 
   Future<void> _startVPN() async {

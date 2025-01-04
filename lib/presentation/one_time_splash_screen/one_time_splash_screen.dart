@@ -84,12 +84,12 @@ class OneTimeSplashScreen extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           // Footer Text with Links
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16),
             child: Text.rich(
               TextSpan(
                 children: [
-                  const TextSpan(
+                  TextSpan(
                     text: 'For full details, please check our ',
                     style: TextStyle(
                       fontSize: 10,
@@ -99,13 +99,13 @@ class OneTimeSplashScreen extends StatelessWidget {
                   ),
                   TextSpan(
                     text: 'Terms & Conditions',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 10,
                       fontFamily: 'Nunito',
                       color: Color(0xFFEC8304),
                     ),
                   ),
-                  const TextSpan(
+                  TextSpan(
                     text: ' and ',
                     style: TextStyle(
                       fontSize: 10,
@@ -115,13 +115,13 @@ class OneTimeSplashScreen extends StatelessWidget {
                   ),
                   TextSpan(
                     text: 'Privacy Policy',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 10,
                       fontFamily: 'Nunito',
                       color: Color(0xFFEC8304),
                     ),
                   ),
-                  const TextSpan(
+                  TextSpan(
                     text: ' before continuing.',
                     style: TextStyle(
                       fontSize: 10,
