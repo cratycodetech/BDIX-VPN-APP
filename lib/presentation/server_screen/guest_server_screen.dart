@@ -2,8 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import '../../controllers/openvpn_controller.dart';
 import '../../routes/routes.dart';
+import '../../service/device_service.dart';
 import '../../widgets/bottomNavigationBar_widget.dart';
+import '../../widgets/disconnect_dialog_box.dart';
+import '../sign_up_screen/sign_up_screen1.dart';
 
 class GuestServerScreen extends StatefulWidget {
   const GuestServerScreen({super.key});
@@ -15,6 +19,8 @@ class GuestServerScreen extends StatefulWidget {
 class GuestServerScreenState extends State<GuestServerScreen> {
   int? _selectedValue = 0;
   late int _currentIndex = 0;
+  final OpenVPNController vpnController = Get.find<OpenVPNController>();
+  final DeviceService _deviceService = DeviceService();
 
   void _handleRadioValueChange(int? value) {
     setState(() {
@@ -81,8 +87,20 @@ class GuestServerScreenState extends State<GuestServerScreen> {
                   borderRadius: BorderRadius.circular(18.r),
                 ),
               ),
-              onPressed: () {
-                Get.toNamed(AppRoutes.signIn);
+              onPressed: () async {
+                if (vpnController.isConnected.value) {
+                  final shouldDisconnect = await showDialog<bool>(
+                    context: context,
+                    builder: (context) => const DisconnectDialog(),
+                  );
+                  if (shouldDisconnect == true) {
+                    _deviceService.removeDeviceId();
+                    Get.offAll(const SignUpScreen());
+                  }
+                } else {
+                  _deviceService.removeDeviceId();
+                  Get.offAll(const SignUpScreen());
+                }
               },
               child: const Text(
                 'SIGN UP',

@@ -34,7 +34,7 @@ class OpenVPNController extends GetxController {
       onVpnStatusChanged: (VpnStatus? status) {
         vpnStatus.value = status;
         isConnected.value = status?.connectedOn != null;
-        vpnConnected.value = isConnected.value; // Update kill switch status
+        vpnConnected.value = isConnected.value;
         debugPrint("VPN Status Changed: $status");
       },
       onVpnStageChanged: (VPNStage stage, String raw) {

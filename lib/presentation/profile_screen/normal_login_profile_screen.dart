@@ -4,7 +4,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
-import 'package:get/get_core/src/get_main.dart';
 import '../../models/user.dart';
 import '../../service/api/user_remote_service.dart';
 import '../../widgets/bottomNavigationBar_widget.dart';

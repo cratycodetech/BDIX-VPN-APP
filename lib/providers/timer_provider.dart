@@ -11,7 +11,7 @@ class TimerNotifier extends StateNotifier<int> {
   bool _normalDialogTriggered = false;
 
 
-  bool get shouldShowAd => !_adTriggered && state == 3590 && !_adShownForSession;
+  bool get shouldShowAd => !_adTriggered && state == 359 && !_adShownForSession;
   bool get signUpDialogShow => _dialogTriggered;
   bool get normalSignUpDialogShow => _normalDialogTriggered;
 
@@ -24,7 +24,7 @@ class TimerNotifier extends StateNotifier<int> {
         state -= 1;
 
         // Check for ad trigger
-        if (state == 3590 && !_adTriggered && !_adShownForSession) {
+        if (state == 359 && !_adTriggered && !_adShownForSession) {
           _adTriggered = true;
           _adShownForSession = true;
         }
@@ -32,7 +32,7 @@ class TimerNotifier extends StateNotifier<int> {
         _timer?.cancel();
       }
 
-      if (state == 3595 && !_dialogTriggered) {
+      if (state == 359 && !_dialogTriggered) {
         _dialogTriggered = true;
       }
 

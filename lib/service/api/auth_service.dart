@@ -65,7 +65,7 @@ class AuthService {
     required String email,
     required String newPassword,
   }) async {
-    final url = Uri.parse('$baseUrl/api/v1/auth//reset-password-app"');
+    final url = Uri.parse('$baseUrl/api/v1/auth/reset-password-app"');
     final response = await http.post(
       url,
       headers: {'Content-Type': 'application/json'},

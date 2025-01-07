@@ -2,6 +2,7 @@ import 'package:bdix_vpn/service/user_service.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../controllers/openvpn_controller.dart';
 import '../../models/user_preferences.dart';
 import '../../routes/routes.dart';
 import '../../service/api/auth_service.dart';
@@ -23,6 +24,7 @@ class _PremiumSettingScreenState extends State<PremiumSettingScreen> {
   final UserService _userService = UserService();
   final DeviceService _deviceService = DeviceService();
   final AuthService _authService = AuthService();
+  final OpenVPNController vpnController = Get.find<OpenVPNController>();
   bool _isKillSwitchToggled = false;
   bool _isConnectOnStartToggled = false;
   bool _isShowNotificationToggled = false;
@@ -65,7 +67,12 @@ class _PremiumSettingScreenState extends State<PremiumSettingScreen> {
       connectOnStart: _isConnectOnStartToggled,
       showNotification: _isShowNotificationToggled,
     );
-    await DatabaseHelper().insertUserPreferences(preferences);
+    UserPreferences? existingPreferences = await DatabaseHelper().getUserPreferences(userId);
+    if (existingPreferences != null) {
+      await DatabaseHelper().updateUserPreferences(preferences);
+    } else {
+      await DatabaseHelper().insertUserPreferences(preferences);
+    }
   }
 
   void _handleRadioValueChange(int? value) {
@@ -93,12 +100,28 @@ class _PremiumSettingScreenState extends State<PremiumSettingScreen> {
   }
 
   Future<void> _logout(BuildContext context) async {
-    final shouldDisconnect = await showDialog<bool>(
-      context: context,
-      builder: (context) => const DisconnectDialog(),
-    );
+    if (vpnController.isConnected.value) {
+      final shouldDisconnect = await showDialog<bool>(
+        context: context,
+        builder: (context) => const DisconnectDialog(),
+      );
 
-    if (shouldDisconnect == true) {
+      if (shouldDisconnect == true) {
+        try {
+          await _userService.removeUserType();
+          await _authService.logout();
+          Get.toNamed(AppRoutes.signIn);
+        } catch (e) {
+          Get.snackbar(
+            'Error',
+            'Logout failed. Please try again.',
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: Colors.red,
+            colorText: Colors.white,
+          );
+        }
+      }
+    } else {
       try {
         await _userService.removeUserType();
         await _authService.logout();
@@ -156,7 +179,7 @@ class _PremiumSettingScreenState extends State<PremiumSettingScreen> {
                 const Spacer(),
                 Radio<int>(
                   value: 1,
-                  groupValue: _selectedValue,
+                  groupValue: 1,
                   onChanged: _handleRadioValueChange,
                 ),
               ],

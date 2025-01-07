@@ -6,7 +6,7 @@ import 'package:bdix_vpn/presentation/profile_screen/normal_login_profile_screen
 import 'package:bdix_vpn/presentation/setting_screen/guest_setting_screen.dart';
 import 'package:bdix_vpn/presentation/subscription_screen/premium_subscription_screen.dart';
 import 'package:get/get.dart';
-import '../controllers/openvpn_controller.dart';
+import '../middleware/auth_middleware.dart';
 import '../presentation/connected_screen/normal_connected_screen.dart';
 import '../presentation/connection_screen/connection_report_screen.dart';
 import '../presentation/forgot_password/forgot_password.dart';
@@ -57,13 +57,31 @@ class AppRoutes {
     GetPage(name: signUp1, page: () => const SignUpScreen()),
     GetPage(name: signUpOTP, page: () => const SignUp3()),
     GetPage(name: signUpPass, page: () => const SignUp6()),
-    GetPage(name: guestHome, page: () => GuestHome()),
+    GetPage(
+      name: guestHome,
+      page: () => GuestHome(),
+      middlewares: [
+        AuthMiddleware(), // Apply middleware here
+      ],
+    ),
     GetPage(
         name: connectionReportScreen,
         page: () => const ConnectionReportScreen()),
-    GetPage(name: guestServerScreen, page: () => const GuestServerScreen()),
+    GetPage(
+      name: guestServerScreen,
+      page: () => const GuestServerScreen(),
+      middlewares: [
+        AuthMiddleware(),
+      ],
+    ),
     GetPage(name: normalServerScreen, page: () => const NormalServerScreen()),
-    GetPage(name: guestProfileScreen, page: () => const GuestProfileScreen()),
+    GetPage(
+      name: guestProfileScreen,
+      page: () => const GuestProfileScreen(),
+      middlewares: [
+        AuthMiddleware(),
+      ],
+    ),
     GetPage(
         name: normalLoginProfileScreen,
         page: () => const NormalLoginProfileScreen()),
@@ -84,10 +102,10 @@ class AppRoutes {
         page: () => const PremiumConnectedScreen()),
     GetPage(
       name: guestHomeScreen,
-      page: () {
-        final OpenVPNController vpnController = Get.find<OpenVPNController>();
-        return GuestHomeScreen(engine: vpnController.engine);
-      },
+      page: () => const GuestHomeScreen(),
+      middlewares: [
+        AuthMiddleware(),
+      ],
     )
   ];
 }

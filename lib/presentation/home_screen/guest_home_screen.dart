@@ -4,13 +4,13 @@ import 'package:flutter_svg/svg.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
-import 'package:openvpn_flutter/openvpn_flutter.dart';
 import '../../advertisment/reworded_ad.dart';
 import '../../controllers/openvpn_controller.dart';
 import '../../routes/routes.dart';
 import '../../service/database/database_helper.dart';
 import '../../service/device_service.dart';
 import '../../service/user_service.dart';
+import '../../utils/scaffold_messenger_utils.dart';
 import '../../utils/speed_utils.dart';
 import '../../widgets/bottomNavigationBar_widget.dart';
 import '../../widgets/normal_user_restriction.dart';
@@ -22,9 +22,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class GuestHomeScreen extends ConsumerStatefulWidget {
-  final OpenVPN engine;
-
-  const GuestHomeScreen({super.key, required this.engine});
+  const GuestHomeScreen({super.key});
 
   @override
   ConsumerState<GuestHomeScreen> createState() => _GuestHomeScreenState();
@@ -50,7 +48,10 @@ class _GuestHomeScreenState extends ConsumerState<GuestHomeScreen> {
     });
   }
 
+
+
   Future<void> _disconnectVPN() async {
+    print("ki obostha");
     sessionEndTime = DateTime.now();
     _speed.stopMonitoring();
 
@@ -211,12 +212,13 @@ class _GuestHomeScreenState extends ConsumerState<GuestHomeScreen> {
       print("ki value $isGuest");
       ref.listen<int>(timerProvider, (previous, next) {
         if (ref.read(timerProvider.notifier).signUpDialogShow) {
-          showSignUpDialog(context);
+          vpnController.disconnect();
+          showSignUpDialog(context,true);
           ref.read(timerProvider.notifier).resetAdFlag();
         }
       });
     }
-    if (isNotPremium) {
+    if (isNotPremium && !isGuest) {
       ref.listen<int>(timerProvider, (previous, next) {
         if (ref.read(timerProvider.notifier).normalSignUpDialogShow) {
           normalUserRestrictionUpDialog(context);
@@ -425,7 +427,9 @@ class _GuestHomeScreenState extends ConsumerState<GuestHomeScreen> {
                           children: [
                             Expanded(
                               child: ElevatedButton(
-                                onPressed: () {},
+                                onPressed: () {
+
+                                },
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: const Color(0xFFEC8304),
                                   shape: RoundedRectangleBorder(
@@ -444,7 +448,15 @@ class _GuestHomeScreenState extends ConsumerState<GuestHomeScreen> {
                             SizedBox(width: 12.w),
                             Expanded(
                               child: OutlinedButton(
-                                onPressed: () {},
+                                onPressed: () {
+                                  if (isGuest) {
+                                    //vpnController.disconnect();
+                                    //showSignUpDialog(context,false);
+                                    showScaffoldMessage(context, "You have to signup first to be premium user");
+                                  } else {
+                                    normalUserRestrictionUpDialog(context);
+                                  }
+                                },
                                 style: OutlinedButton.styleFrom(
                                   side: BorderSide(
                                       color: const Color(0xFFEC8304),

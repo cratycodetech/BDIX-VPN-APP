@@ -1,26 +1,46 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:get/get_core/src/get_main.dart';
-
 import '../routes/routes.dart';
+import '../service/device_service.dart';
 
-class BottomNavBar extends StatelessWidget {
+class BottomNavBar extends StatefulWidget {
   final int currentIndex;
   final Function(int) onTap;
+  final DeviceService _deviceService = DeviceService();
 
-  const BottomNavBar({
-    Key? key,
+  BottomNavBar({
+    super.key,
     required this.currentIndex,
     required this.onTap,
-  }) : super(key: key);
+  });
+
+  @override
+  _BottomNavBarState createState() => _BottomNavBarState();
+
+
+}
+
+class _BottomNavBarState extends State<BottomNavBar> {
+  bool isGuest = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeGuestStatus();
+  }
+
+  Future<void> _initializeGuestStatus() async {
+    isGuest = await widget._deviceService.checkGuestStatus();
+    setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {
     return BottomNavigationBar(
-      currentIndex: currentIndex,
+      currentIndex: widget.currentIndex,
       onTap: (index) {
         _handleTap(context, index); // Custom tap handler for each item
-        onTap(index); // Pass the tap event to the parent
+        widget.onTap(index); // Pass the tap event to the parent
       },
       selectedItemColor: const Color(0xFF080E59),
       unselectedItemColor: const Color(0xFF9B9594),
@@ -54,7 +74,12 @@ class BottomNavBar extends StatelessWidget {
         Get.toNamed(AppRoutes.guestServerScreen);
         break;
       case 2:
-        Get.toNamed(AppRoutes.normalLoginProfileScreen);
+        if(isGuest){
+          Get.toNamed(AppRoutes.guestProfileScreen);
+        }else{
+          Get.toNamed(AppRoutes.normalLoginProfileScreen);
+        }
+
         break;
       case 3:
         Get.toNamed(AppRoutes.premiumSettingScreen);

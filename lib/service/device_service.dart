@@ -6,4 +6,10 @@ class DeviceService {
     String? deviceId = prefs.getString('guest_device_id');
     return deviceId != null;
   }
+
+  Future<void> removeDeviceId() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.remove('guest_device_id');
+  }
+
 }

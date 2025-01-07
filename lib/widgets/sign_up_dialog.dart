@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import '../presentation/sign_in_screen/sign_in_screen.dart';
+import '../routes/routes.dart';
+import '../service/device_service.dart';
+import '../utils/scaffold_messenger_utils.dart';
 
-import '../controllers/openvpn_controller.dart';
 
+void showSignUpDialog(BuildContext context,bool timeOver ) async {
 
-void showSignUpDialog(BuildContext context) async {
-
-  final vpnController = Get.find<OpenVPNController>();
+  final DeviceService deviceService = DeviceService();
 
   final result = await showDialog(
     context: context,
@@ -18,11 +19,16 @@ void showSignUpDialog(BuildContext context) async {
         actions: [
           TextButton(
             onPressed: () async {
-              SharedPreferences prefs = await SharedPreferences.getInstance();
-              await prefs.remove('guest_device_id');
-              vpnController.disconnect();
-              Navigator.pop(context, true);
-              Get.toNamed('/signIn');
+              if(timeOver){
+                deviceService.removeDeviceId();
+                Navigator.pop(context, true);
+                Get.offAll(SignInScreen());
+              }
+              else{
+                Navigator.pop(context, true);
+                showScaffoldMessage(context, "You have to signup first to be premium user");
+              }
+
             },
             child: const Text('OK'),
           ),
@@ -32,10 +38,12 @@ void showSignUpDialog(BuildContext context) async {
   );
 
   if (result == null) {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.remove('guest_device_id');
-    vpnController.disconnect();
-    Get.toNamed('/signIn');
+    if(timeOver){
+      deviceService.removeDeviceId();
+      Get.offAll(SignInScreen());
+    }
+
+
   }
 }
 

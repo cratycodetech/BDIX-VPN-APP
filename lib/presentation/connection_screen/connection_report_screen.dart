@@ -72,15 +72,6 @@ class ConnectionReportScreenState extends State<ConnectionReportScreen> {
   void _onItemTapped(int index) {
     setState(() {
       _currentIndex = index;
-      if (index == 0) {
-        Navigator.pushNamed(context, '/home');
-      } else if (index == 1) {
-        Navigator.pushNamed(context, '/server');
-      } else if (index == 2) {
-        Navigator.pushNamed(context, '/profile');
-      } else if (index == 3) {
-        Navigator.pushNamed(context, '/settings');
-      }
     });
   }
 

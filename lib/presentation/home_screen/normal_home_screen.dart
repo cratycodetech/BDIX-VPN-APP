@@ -1,6 +1,8 @@
+import 'package:bdix_vpn/service/device_service.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../models/user_preferences.dart';
+import '../../routes/routes.dart';
 import '../../service/database/database_helper.dart';
 import '../../service/user_service.dart';
 import '../../widgets/bottomNavigationBar_widget.dart';
@@ -10,7 +12,7 @@ import 'guest_home_screen.dart';
 
 
 class GuestHome extends StatefulWidget {
-  const GuestHome({Key? key}) : super(key: key);
+  const GuestHome({super.key});
 
   @override
   State<GuestHome> createState() => _GuestHomeState();
@@ -20,9 +22,10 @@ class _GuestHomeState extends State<GuestHome> {
   final OpenVPNController vpnController =
   Get.find<OpenVPNController>();
   final UserService _userService = UserService();
+  final DeviceService _deviceService = DeviceService();
   bool isPremium = false;
   bool isCurrentScreen = true;
-
+  bool isGuest = false;
 
 
   @override
@@ -32,16 +35,22 @@ class _GuestHomeState extends State<GuestHome> {
     _observeConnection();
     _loadUserType();
     _conditionalStartVPN();
+    _initializeGuestStatus();
   }
 
   @override
   void dispose() {
-    isCurrentScreen = false;
     super.dispose();
+    isCurrentScreen = false;
+  }
+
+  Future<void> _initializeGuestStatus() async {
+    isGuest = await _deviceService.checkGuestStatus();
+    setState(() {});
   }
 
   Future<void> _loadUserType() async {
-    bool userType = await _userService.getUserType(); // await the Future<bool> here
+    bool userType = await _userService.getUserType();
     setState(() {
       isPremium = userType;
     });
@@ -56,7 +65,8 @@ class _GuestHomeState extends State<GuestHome> {
   void _observeConnection() {
     vpnController.isConnected.listen((connected) {
       if (connected && isCurrentScreen) {
-        Future.microtask(() => Get.off(() => GuestHomeScreen(engine: vpnController.engine)));
+        isCurrentScreen= false;
+        Get.toNamed(AppRoutes.guestHomeScreen);
       }
     });
   }
@@ -92,7 +102,7 @@ class _GuestHomeState extends State<GuestHome> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: TopAppBar(isPremium: isPremium),
+      appBar: TopAppBar(isPremium: isPremium,isGuest: isGuest),
       body: Obx(() {
         return Column(
           children: [
