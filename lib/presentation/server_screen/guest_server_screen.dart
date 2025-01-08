@@ -18,7 +18,7 @@ class GuestServerScreen extends StatefulWidget {
 
 class GuestServerScreenState extends State<GuestServerScreen> {
   int? _selectedValue = 0;
-  late int _currentIndex = 0;
+  late int _currentIndex = 1;
   final OpenVPNController vpnController = Get.find<OpenVPNController>();
   final DeviceService _deviceService = DeviceService();
 

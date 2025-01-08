@@ -36,7 +36,7 @@ class TimerNotifier extends StateNotifier<int> {
         _dialogTriggered = true;
       }
 
-      if (state == 3585 && !_normalDialogTriggered) {
+      if (state == 358 && !_normalDialogTriggered) {
         _normalDialogTriggered  = true;
       }
 

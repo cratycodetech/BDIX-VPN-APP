@@ -20,7 +20,7 @@ class PremiumSettingScreen extends StatefulWidget {
 
 class _PremiumSettingScreenState extends State<PremiumSettingScreen> {
   int? _selectedValue = 0;
-  late int _currentIndex = 0;
+  late int _currentIndex = 3;
   final UserService _userService = UserService();
   final DeviceService _deviceService = DeviceService();
   final AuthService _authService = AuthService();

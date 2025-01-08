@@ -454,7 +454,7 @@ class _GuestHomeScreenState extends ConsumerState<GuestHomeScreen> {
                                     //showSignUpDialog(context,false);
                                     showScaffoldMessage(context, "You have to signup first to be premium user");
                                   } else {
-                                    normalUserRestrictionUpDialog(context);
+                                    Get.toNamed(AppRoutes.premiumSubscriptionScreen);
                                   }
                                 },
                                 style: OutlinedButton.styleFrom(

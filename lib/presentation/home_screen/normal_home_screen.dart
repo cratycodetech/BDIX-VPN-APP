@@ -36,7 +36,6 @@ class _GuestHomeState extends ConsumerState<GuestHome> {
     super.initState();
     _loadConfig();
     _observeConnection();
-print("ki obostha $isCurrentScreen");
     _loadUserType();
     _conditionalStartVPN();
     _initializeGuestStatus();
@@ -69,7 +68,7 @@ print("ki obostha $isCurrentScreen");
   void _observeConnection() {
     vpnController.isConnected.listen((connected) {
       print("connected status $connected");
-      if (connected && isCurrentScreen) {
+      if (connected ) {
         //isCurrentScreen= false;
         ref.read(timerProvider.notifier).startTimer();
         Get.offAll(const GuestHomeScreen());

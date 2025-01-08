@@ -11,6 +11,8 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
+import '../../utils/scaffold_messenger_utils.dart';
+
 class PremiumSubscriptionScreen extends StatefulWidget {
   const PremiumSubscriptionScreen({super.key});
 
@@ -64,7 +66,8 @@ class _PremiumSubscriptionScreenState extends State<PremiumSubscriptionScreen> {
     final String? baseUrl = dotenv.env['BASE_URL'];
     final String apiUrl = "$baseUrl/api/v1/premium-user/create";
     final token = await _tokenService.getToken();
-    final userId = await _userService.getUserId();
+    final userId = await _tokenService.decodeUserId();
+    print(" ki obostha $userId");
     try {
       final response = await http.post(
         Uri.parse(apiUrl),
@@ -82,7 +85,9 @@ class _PremiumSubscriptionScreenState extends State<PremiumSubscriptionScreen> {
       if (response.statusCode == 200) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text("Subscription activated for $plan!"),
+
         ));
+        showScaffoldMessage(context, "Login again to get premium access");
       } else {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text("${response.statusCode} Failed to activate subscription: ${response.body}"),
@@ -161,13 +166,13 @@ class _PremiumSubscriptionScreenState extends State<PremiumSubscriptionScreen> {
             child: Column(
               children: [
                 _buildPlanButton(
-                  label: "1 Month",
+                  label: "1 month",
                   price: "BDT 1000/month",
                   amount: "1000",
                 ),
                 const SizedBox(height: 10),
                 _buildPlanButton(
-                  label: "1 Year",
+                  label: "1 year",
                   price: "BDT 4000/year",
                   amount: "4000",
                 ),

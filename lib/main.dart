@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:bdix_vpn/presentation/connection_screen/connection_failed_screen.dart';
+import 'package:bdix_vpn/providers/timer_provider.dart';
 import 'package:bdix_vpn/service/connectivity_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -11,14 +12,20 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'controllers/openvpn_controller.dart';
 import 'routes/routes.dart';
+import 'package:workmanager/workmanager.dart';
+
+
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
   MobileAds.instance.initialize();
+
   final openVpnController = Get.put(OpenVPNController());
   await openVpnController.init();
   final connectivityService = Get.put(ConnectivityService());
+
+
   runApp(ProviderScope(
     child: MyApp(connectivityService: connectivityService),
   ));
@@ -53,6 +60,7 @@ class MyApp extends StatelessWidget {
             }
             final OpenVPNController vpnController = Get.find<OpenVPNController>();
             // Show the main app if connected
+            print("object1 ${vpnController.isConnected.value}");
             return GetMaterialApp(
               debugShowCheckedModeBanner: false,
               title: 'Flutter Demo',

@@ -11,7 +11,7 @@ class NormalServerScreen extends StatefulWidget {
 
 class _NormalServerScreenState extends State<NormalServerScreen> {
   int? _selectedValue = 0;
-  late int _currentIndex = 0;
+  late int _currentIndex = 1;
 
   void _handleRadioValueChange(int? value) {
     setState(() {

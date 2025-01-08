@@ -5,7 +5,10 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import '../../models/user.dart';
+import '../../routes/routes.dart';
 import '../../service/api/user_remote_service.dart';
+import '../../service/database/database_helper.dart';
+import '../../service/user_service.dart';
 import '../../widgets/bottomNavigationBar_widget.dart';
 import '../forgot_password/forgot_password.dart';
 
@@ -17,8 +20,11 @@ class NormalLoginProfileScreen extends StatefulWidget {
 }
 
 class _NormalLoginProfileScreenState extends State<NormalLoginProfileScreen> {
-  late int _currentIndex = 0;
+  final UserService _userService = UserService();
+  late int _currentIndex =  2;
   late Future<User> _userFuture;
+  int totalDataUsed = 0;
+  bool isPremium = false;
 
   bool isCheckedForId = false;
   bool isCheckedForEmail = false;
@@ -59,11 +65,35 @@ class _NormalLoginProfileScreenState extends State<NormalLoginProfileScreen> {
     }
   }
 
+  void getTotalData() async {
+    final dbHelper = DatabaseHelper();
+    totalDataUsed = await dbHelper.getTotalDataUsed();
+  }
+
+  String formatDataUsage(int dataUsedKilobytes) {
+    if (dataUsedKilobytes >= 1024) {
+      // Convert kilobytes to megabytes (1 MB = 1024 KB)
+      return "${(dataUsedKilobytes / 1024).toStringAsFixed(2)} MB";
+    } else {
+      // Keep it as kilobytes if less than 1 MB
+      return "$dataUsedKilobytes KB";
+    }
+  }
+
+  Future<void> _loadUserType() async {
+    bool userType = await _userService.getUserType();
+    setState(() {
+      isPremium = userType;
+    });
+  }
+
+
 
   @override
   void initState() {
     super.initState();
     _userFuture = UserRemoteService().userDetails();
+    getTotalData();
   }
 
   void _onItemTapped(int index) {
@@ -225,9 +255,9 @@ class _NormalLoginProfileScreenState extends State<NormalLoginProfileScreen> {
                           fontWeight: FontWeight.bold),
                     ),
                     const Spacer(),
-                    const Text(
-                      '120mb', // Displaying user VPN if exists
-                      style: TextStyle(
+                    Text(
+                      formatDataUsage(totalDataUsed), // Displaying user VPN if exists
+                      style: const TextStyle(
                           color: Colors.grey,
                           fontSize: 14,
                           fontWeight: FontWeight.bold),
@@ -303,9 +333,11 @@ class _NormalLoginProfileScreenState extends State<NormalLoginProfileScreen> {
                           padding: EdgeInsets.zero,
                         ),
                         onPressed: () {},
-                        child: const Text(
-                          'Normal',
-                          style: TextStyle(
+                        child: Text(
+                          isPremium
+                              ? 'Normal'
+                              : "Premium",
+                          style: const TextStyle(
                             color: Colors.white,
                             fontSize: 10,
                           ),
@@ -335,10 +367,12 @@ class _NormalLoginProfileScreenState extends State<NormalLoginProfileScreen> {
                             ),
                             padding: EdgeInsets.zero,
                           ),
-                          onPressed: () {},
-                          child: const Text(
-                            'Upgrade to Premium',
-                            style: TextStyle(
+                          onPressed: () {Get.toNamed(AppRoutes.premiumSubscriptionScreen);},
+                          child: Text(
+                            isPremium
+                                ? 'Upgrade to Premium'
+                                : "Upgrade",
+                            style: const TextStyle(
                               color: Colors.white,
                               fontSize: 10,
                             ),

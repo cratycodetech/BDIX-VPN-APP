@@ -104,4 +104,15 @@ class DatabaseHelper {
     );
   }
 
+  Future<int> getTotalDataUsed() async {
+    final db = await database;
+    final result = await db.rawQuery('SELECT SUM(dataUsed) as total FROM session');
+
+    if (result.isNotEmpty && result.first['total'] != null) {
+      return result.first['total'] as int;
+    }
+    return 0;
+  }
+
+
 }

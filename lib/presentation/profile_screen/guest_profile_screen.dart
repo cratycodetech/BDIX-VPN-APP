@@ -25,7 +25,7 @@ class _GuestProfileScreenState extends State<GuestProfileScreen> {
   final UserService _userService = UserService();
   final DeviceService _deviceService = DeviceService();
   final OpenVPNController vpnController = Get.find<OpenVPNController>();
-  late int _currentIndex = 0;
+  late int _currentIndex = 2;
   bool isCheckedForId = false;
   String userId = "";
 

@@ -73,7 +73,11 @@ class _BottomNavBarState extends State<BottomNavBar> {
             : Get.toNamed(AppRoutes.guestHome);
         break;
       case 1:
-        Get.toNamed(AppRoutes.guestServerScreen);
+        if (isGuest) {
+          Get.toNamed(AppRoutes.guestServerScreen);
+        } else {
+          Get.toNamed(AppRoutes.normalServerScreen);
+        }
         break;
       case 2:
         if (isGuest) {
