@@ -1,7 +1,11 @@
+import 'dart:async';
+
 import 'package:bdix_vpn/service/device_service.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get/get.dart';
 import '../../models/user_preferences.dart';
+import '../../providers/timer_provider.dart';
 import '../../routes/routes.dart';
 import '../../service/database/database_helper.dart';
 import '../../service/user_service.dart';
@@ -10,15 +14,14 @@ import '../../widgets/topAppBar_widget.dart';
 import '../../controllers/openvpn_controller.dart';
 import 'guest_home_screen.dart';
 
-
-class GuestHome extends StatefulWidget {
+class GuestHome extends ConsumerStatefulWidget {
   const GuestHome({super.key});
 
   @override
-  State<GuestHome> createState() => _GuestHomeState();
+  ConsumerState<GuestHome> createState() => _GuestHomeState();
 }
 
-class _GuestHomeState extends State<GuestHome> {
+class _GuestHomeState extends ConsumerState<GuestHome> {
   final OpenVPNController vpnController =
   Get.find<OpenVPNController>();
   final UserService _userService = UserService();
@@ -33,6 +36,7 @@ class _GuestHomeState extends State<GuestHome> {
     super.initState();
     _loadConfig();
     _observeConnection();
+print("ki obostha $isCurrentScreen");
     _loadUserType();
     _conditionalStartVPN();
     _initializeGuestStatus();
@@ -64,9 +68,11 @@ class _GuestHomeState extends State<GuestHome> {
 
   void _observeConnection() {
     vpnController.isConnected.listen((connected) {
+      print("connected status $connected");
       if (connected && isCurrentScreen) {
-        isCurrentScreen= false;
-        Get.toNamed(AppRoutes.guestHomeScreen);
+        //isCurrentScreen= false;
+        ref.read(timerProvider.notifier).startTimer();
+        Get.offAll(const GuestHomeScreen());
       }
     });
   }
@@ -100,6 +106,7 @@ class _GuestHomeState extends State<GuestHome> {
 
   @override
   Widget build(BuildContext context) {
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: TopAppBar(isPremium: isPremium,isGuest: isGuest),

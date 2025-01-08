@@ -16,7 +16,7 @@ class Speed {
 
   int sessionStartBytesSent = 0;
   int sessionStartBytesReceived = 0;
-  late int sessionDataUsedBytes ;
+
 
 
 
@@ -33,7 +33,7 @@ class Speed {
     });
   }
 
-  Future<void> stopMonitoring() async {
+  Future<int> stopMonitoring() async {
     _timer?.cancel();
     final Map<Object?, Object?> trafficStats = await platform.invokeMethod('getTrafficStats');
     final Map<String, dynamic> castedTrafficStats = Map<String, dynamic>.from(trafficStats);
@@ -41,10 +41,9 @@ class Speed {
     int sessionEndBytesSent = castedTrafficStats['bytesSent'] ?? 0;
     int sessionEndBytesReceived = castedTrafficStats['bytesReceived'] ?? 0;
 
-    sessionDataUsedBytes = (sessionEndBytesSent - sessionStartBytesSent) +
+   int sessionDataUsedBytes = (sessionEndBytesSent - sessionStartBytesSent) +
         (sessionEndBytesReceived - sessionStartBytesReceived);
-
-    print('Data used this session: ${sessionDataUsedBytes / 1} KB');
+return sessionDataUsedBytes;
   }
 
   Future<void> updateTrafficStats() async {

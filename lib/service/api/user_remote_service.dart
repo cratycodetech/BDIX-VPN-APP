@@ -71,7 +71,7 @@ class UserRemoteService {
       throw Exception('No token found');
     }
 
-    final url = Uri.parse('$baseUrl/api/v1/auth/logout');
+    final url = Uri.parse('$baseUrl/api/v1/auth/update-pass');
     final response = await http.put(
       url,
       headers: {

@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:io';
+
 import 'package:bdix_vpn/presentation/connection_screen/connection_failed_screen.dart';
 import 'package:bdix_vpn/service/connectivity_service.dart';
 import 'package:flutter/material.dart';
@@ -20,6 +23,8 @@ Future<void> main() async {
     child: MyApp(connectivityService: connectivityService),
   ));
 }
+
+
 
 class MyApp extends StatelessWidget {
   final ConnectivityService connectivityService;
@@ -46,7 +51,7 @@ class MyApp extends StatelessWidget {
                 ),
               );
             }
-
+            final OpenVPNController vpnController = Get.find<OpenVPNController>();
             // Show the main app if connected
             return GetMaterialApp(
               debugShowCheckedModeBanner: false,
@@ -55,7 +60,9 @@ class MyApp extends StatelessWidget {
                 colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
                 useMaterial3: true,
               ),
-              initialRoute: AppRoutes.splash,
+              initialRoute: vpnController.isConnected.value
+                  ? AppRoutes.guestHomeScreen
+                  : AppRoutes.splash,
               getPages: AppRoutes.routes,
               unknownRoute: GetPage(
                 name: '/not-found',

@@ -51,13 +51,13 @@ class _GuestHomeScreenState extends ConsumerState<GuestHomeScreen> {
 
 
   Future<void> _disconnectVPN() async {
-    print("ki obostha");
+
     sessionEndTime = DateTime.now();
     _speed.stopMonitoring();
 
-    int dataUsedBytes = _speed.sessionDataUsedBytes;
+    int? dataUsedBytes = await _speed.stopMonitoring();
 
-    print('Data use in guest $dataUsedBytes');
+    print('ki obostha Data use in guest $dataUsedBytes');
 
     final dbHelper = DatabaseHelper();
     await dbHelper.insertSession(
@@ -128,7 +128,7 @@ class _GuestHomeScreenState extends ConsumerState<GuestHomeScreen> {
     MobileAds.instance.initialize();
     _rewardedAdManager = RewardedAdManager();
     _loadRewardedAd();
-    ref.read(timerProvider.notifier).startTimer();
+    //ref.read(timerProvider.notifier).startTimer();
     _speed.startMonitoring();
     _startTrafficStatsUpdate();
     _loadUserType();

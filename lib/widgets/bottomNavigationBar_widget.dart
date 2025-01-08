@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../controllers/openvpn_controller.dart';
 import '../routes/routes.dart';
 import '../service/device_service.dart';
 
@@ -16,12 +17,11 @@ class BottomNavBar extends StatefulWidget {
 
   @override
   _BottomNavBarState createState() => _BottomNavBarState();
-
-
 }
 
 class _BottomNavBarState extends State<BottomNavBar> {
   bool isGuest = false;
+  final OpenVPNController vpnController = Get.find<OpenVPNController>();
 
   @override
   void initState() {
@@ -68,15 +68,17 @@ class _BottomNavBarState extends State<BottomNavBar> {
   void _handleTap(BuildContext context, int index) {
     switch (index) {
       case 0:
-        Get.toNamed(AppRoutes.guestHome);
+        vpnController.isConnected.value
+            ? Get.toNamed(AppRoutes.guestHomeScreen)
+            : Get.toNamed(AppRoutes.guestHome);
         break;
       case 1:
         Get.toNamed(AppRoutes.guestServerScreen);
         break;
       case 2:
-        if(isGuest){
+        if (isGuest) {
           Get.toNamed(AppRoutes.guestProfileScreen);
-        }else{
+        } else {
           Get.toNamed(AppRoutes.normalLoginProfileScreen);
         }
 
