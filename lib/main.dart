@@ -1,8 +1,5 @@
 import 'dart:async';
-import 'dart:io';
-
 import 'package:bdix_vpn/presentation/connection_screen/connection_failed_screen.dart';
-import 'package:bdix_vpn/providers/timer_provider.dart';
 import 'package:bdix_vpn/service/connectivity_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -10,11 +7,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get/get.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'controllers/openvpn_controller.dart';
 import 'routes/routes.dart';
-import 'package:workmanager/workmanager.dart';
-
-
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -25,19 +20,32 @@ Future<void> main() async {
   await openVpnController.init();
   final connectivityService = Get.put(ConnectivityService());
 
-
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  bool isFirstLaunch = prefs.getBool('isFirstLaunch') ?? true;
+  if (isFirstLaunch) {
+    await prefs.setBool('isFirstLaunch', false);
+  }
   runApp(ProviderScope(
-    child: MyApp(connectivityService: connectivityService),
+    child: MyApp(
+      connectivityService: connectivityService,
+      initialRoute: isFirstLaunch ? AppRoutes.splash : AppRoutes.welcome,
+    ),
   ));
 }
 
-
-
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   final ConnectivityService connectivityService;
+  final String initialRoute;
+  const MyApp(
+      {super.key,
+      required this.connectivityService,
+      required this.initialRoute});
 
-  const MyApp({super.key, required this.connectivityService});
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
 
+class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return ScreenUtilInit(
@@ -46,21 +54,21 @@ class MyApp extends StatelessWidget {
       splitScreenMode: true,
       builder: (context, child) {
         return StreamBuilder<bool>(
-          stream: connectivityService.connectivityStream,
+          stream: widget.connectivityService.connectivityStream,
           builder: (context, snapshot) {
             if (snapshot.hasData && !snapshot.data!) {
               return GetMaterialApp(
                 home: const ConnectionFailedScreen(),
                 debugShowCheckedModeBanner: false,
                 theme: ThemeData(
-                  colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+                  colorScheme:
+                      ColorScheme.fromSeed(seedColor: Colors.deepPurple),
                   useMaterial3: true,
                 ),
               );
             }
-            final OpenVPNController vpnController = Get.find<OpenVPNController>();
-            // Show the main app if connected
-            print("object1 ${vpnController.isConnected.value}");
+            final OpenVPNController vpnController =
+                Get.find<OpenVPNController>();
             return GetMaterialApp(
               debugShowCheckedModeBanner: false,
               title: 'Flutter Demo',
@@ -70,7 +78,7 @@ class MyApp extends StatelessWidget {
               ),
               initialRoute: vpnController.isConnected.value
                   ? AppRoutes.guestHomeScreen
-                  : AppRoutes.splash,
+                  : widget.initialRoute,
               getPages: AppRoutes.routes,
               unknownRoute: GetPage(
                 name: '/not-found',

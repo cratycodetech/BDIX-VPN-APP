@@ -7,14 +7,19 @@ import '../../service/api/auth_service.dart';
 import '../../service/user_service.dart';
 import '../../utils/validation_utils.dart';
 
-class SignInScreen extends StatelessWidget {
-  SignInScreen({Key? key}) : super(key: key);
+class SignInScreen extends StatefulWidget {
+  SignInScreen({super.key});
 
+  @override
+  State<SignInScreen> createState() => _SignInScreenState();
+}
+class _SignInScreenState extends State<SignInScreen> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final AuthService _authService = AuthService();
   final UserService _userService = UserService();
+  bool _obscurePassword = true;
 
 
   @override
@@ -51,8 +56,15 @@ class SignInScreen extends StatelessWidget {
                     controller: passwordController,
                     hintText: "Password",
                     prefixIcon: Icons.lock_outline,
-                    suffixIcon: Icons.visibility_outlined,
-                    obscureText: true,
+                    suffixIcon: _obscurePassword
+                        ? Icons.visibility_outlined
+                        : Icons.visibility_off_outlined,
+                    obscureText: _obscurePassword,
+                    onSuffixIconTap: () {
+                      setState(() {
+                        _obscurePassword = !_obscurePassword;
+                      });
+                    },
                   ),
                   const SizedBox(height: 10),
                   // Forgot Password
@@ -208,21 +220,24 @@ class SignInScreen extends StatelessWidget {
   }
 }
 
+
 class CustomTextFormField extends StatelessWidget {
   final TextEditingController controller;
   final String hintText;
   final IconData? prefixIcon;
   final IconData? suffixIcon;
   final bool obscureText;
+  final VoidCallback? onSuffixIconTap;
 
   const CustomTextFormField({
-    Key? key,
+    super.key,
     required this.controller,
     required this.hintText,
     this.prefixIcon,
     this.suffixIcon,
     this.obscureText = false,
-  }) : super(key: key);
+    this.onSuffixIconTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -231,30 +246,23 @@ class CustomTextFormField extends StatelessWidget {
       obscureText: obscureText,
       decoration: InputDecoration(
         hintText: hintText,
-        hintStyle: const TextStyle(
-          fontSize: 14,
-          color: Colors.grey,
-        ),
-        prefixIcon: prefixIcon != null
-            ? Icon(prefixIcon, color: Colors.grey)
-            : null,
+        hintStyle: const TextStyle(fontSize: 14, color: Colors.grey),
+        prefixIcon: prefixIcon != null ? Icon(prefixIcon, color: Colors.grey) : null,
         suffixIcon: suffixIcon != null
-            ? Icon(suffixIcon, color: Colors.grey)
+            ? GestureDetector(
+          onTap: onSuffixIconTap,
+          child: Icon(suffixIcon, color: Colors.grey),
+        )
             : null,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(
-            color: Colors.grey,
-          ),
+          borderSide: const BorderSide(color: Colors.grey),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(
-            color: Color(0xFF393E7A),
-          ),
+          borderSide: const BorderSide(color: Color(0xFF393E7A)),
         ),
-        contentPadding:
-            const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+        contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
       ),
     );
   }

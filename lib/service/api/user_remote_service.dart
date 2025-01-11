@@ -39,27 +39,32 @@ class UserRemoteService {
   }
 
   Future<void> updateEmail({required String email}) async {
-    final token = await _tokenService.getToken();
+    try {
+      final token = await _tokenService.getToken();
 
-    if (token == null) {
-      throw Exception('No token found');
-    }
+      if (token == null) {
+        throw Exception('No token found');
+      }
 
-    final url = Uri.parse('$baseUrl/api/v1/auth/logout');
-    final response = await http.put(
-      url,
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
-      },
-      body: jsonEncode({
-        'email': email,
-      }),
-    );
+      final url = Uri.parse('$baseUrl/api/v1/auth/update-email');
+      final response = await http.put(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'newEmail': email,
+        }),
+      );
 
-    if (response.statusCode != 200) {
-      final errorResponse = jsonDecode(response.body);
-      throw Exception(errorResponse['message'] ?? 'Update failed');
+      if (response.statusCode != 200) {
+        final errorResponse = jsonDecode(response.body);
+        throw Exception(errorResponse['message'] ?? 'Update failed');
+      }
+    } catch (e) {
+      // Log or handle the error appropriately
+      throw Exception('Failed to update email: ${e.toString()}');
     }
   }
 
@@ -88,5 +93,26 @@ class UserRemoteService {
       final errorResponse = jsonDecode(response.body);
       throw Exception(errorResponse['message'] ?? 'Update failed');
     }
+  }
+
+  Future<String> premiumUserSubscription() async {
+      final token = await _tokenService.getToken();
+
+      final url = Uri.parse('$baseUrl/api/v1/premium-user/subscribed-package');
+
+      final response = await http.get(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode != 200) {
+        throw Exception('Failed to verify OTP: ${response.body}');
+      }
+      Map<String, dynamic> data = jsonDecode(response.body);
+      String subscriptionType = data['subscriptionType'];
+      return subscriptionType;
   }
 }

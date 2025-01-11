@@ -11,7 +11,7 @@ class AuthService {
   Future<void> sendOTP({
     required String email,
   }) async {
-    final url = Uri.parse('$baseUrl/api/v1/auth/send-otp');
+    final url = Uri.parse('$baseUrl/api/v1/auth/forget-password');
     final response = await http.post(
       url,
       headers: {'Content-Type': 'application/json'},
@@ -65,7 +65,7 @@ class AuthService {
     required String email,
     required String newPassword,
   }) async {
-    final url = Uri.parse('$baseUrl/api/v1/auth/reset-password-app"');
+    final url = Uri.parse('$baseUrl/api/v1/auth/reset-password-app');
     final response = await http.post(
       url,
       headers: {'Content-Type': 'application/json'},
@@ -77,7 +77,7 @@ class AuthService {
     );
 
     if (response.statusCode != 200) {
-      throw Exception('Failed to verify OTP: ${response.body}');
+      throw Exception('Failed to change password: ${response.body}');
     }
   }
 

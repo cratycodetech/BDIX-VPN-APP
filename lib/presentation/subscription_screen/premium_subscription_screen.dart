@@ -11,6 +11,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
+import '../../service/api/user_remote_service.dart';
 import '../../utils/scaffold_messenger_utils.dart';
 
 class PremiumSubscriptionScreen extends StatefulWidget {
@@ -21,9 +22,35 @@ class PremiumSubscriptionScreen extends StatefulWidget {
       _PremiumSubscriptionScreenState();
 }
 
+
 class _PremiumSubscriptionScreenState extends State<PremiumSubscriptionScreen> {
   final UserService _userService = UserService();
   final TokenService _tokenService = TokenService();
+  final UserRemoteService _userRemoteService = UserRemoteService();
+  String _currentPlan = 'Free Plan';
+
+
+  @override
+  void initState() {
+    super.initState();
+
+    _loadCurrentSubscription();
+  }
+
+  Future<void> _loadCurrentSubscription() async {
+    try {
+      String subscriptionType = await _userRemoteService.premiumUserSubscription();
+      setState(() {
+        _currentPlan = subscriptionType;  // Update the UI
+      });
+    } catch (e) {
+      setState(() {
+        _currentPlan = 'Free Plan';  // Fallback if error occurs
+      });
+    }
+  }
+
+
   Future<void> _startPayment(String amount, String plan) async {
     try {
       Sslcommerz sslcommerz = Sslcommerz(
@@ -67,7 +94,6 @@ class _PremiumSubscriptionScreenState extends State<PremiumSubscriptionScreen> {
     final String apiUrl = "$baseUrl/api/v1/premium-user/create";
     final token = await _tokenService.getToken();
     final userId = await _tokenService.decodeUserId();
-    print(" ki obostha $userId");
     try {
       final response = await http.post(
         Uri.parse(apiUrl),
@@ -87,7 +113,7 @@ class _PremiumSubscriptionScreenState extends State<PremiumSubscriptionScreen> {
           content: Text("Subscription activated for $plan!"),
 
         ));
-        showScaffoldMessage(context, "Login again to get premium access");
+        showScaffoldMessage(context, "Login again to get premium package access");
       } else {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text("${response.statusCode} Failed to activate subscription: ${response.body}"),
@@ -227,44 +253,75 @@ class _PremiumSubscriptionScreenState extends State<PremiumSubscriptionScreen> {
     required String price,
     required String amount,
   }) {
+    bool isCurrentPlan = _currentPlan.toLowerCase() == label.toLowerCase();
+
     return SizedBox(
       width: double.infinity,
       height: 60,
-      child: Container(
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [
-              Color(0xFF4A00E0),
-              Color(0xFF9396BA),
-            ],
-            stops: [0.0, 0.7],
-            begin: Alignment.centerLeft,
-            end: Alignment.centerRight,
-          ),
-          borderRadius: BorderRadius.circular(26),
-        ),
-        child: TextButton(
-          style: TextButton.styleFrom(
-            shape: RoundedRectangleBorder(
+      child: Stack(
+        alignment: Alignment.topRight,
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [
+                  Color(0xFF4A00E0),
+                  Color(0xFF9396BA),
+                ],
+                stops: [0.0, 0.7],
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+              ),
               borderRadius: BorderRadius.circular(26),
             ),
-          ),
-          onPressed: () => _startPayment(amount, label),
-          child: Row(
-            children: [
-              Text(
-                label,
-                style: const TextStyle(color: Colors.white, fontSize: 16),
+            child: TextButton(
+              style: TextButton.styleFrom(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(26),
+                ),
               ),
-              const Spacer(),
-              Text(
-                price,
-                style: const TextStyle(color: Color(0xFFFEFEFE), fontSize: 12),
+              onPressed: isCurrentPlan ? null : () =>
+                  _startPayment(amount, label),
+              child: Row(
+                children: [
+                  Text(
+                    label,
+                    style: const TextStyle(color: Colors.white, fontSize: 16),
+                  ),
+                  const Spacer(),
+                  Text(
+                    price,
+                    style: const TextStyle(
+                        color: Color(0xFFFEFEFE), fontSize: 12),
+                  ),
+                  const SizedBox(width: 8),
+                ],
               ),
-              const SizedBox(width: 8),
-            ],
+            ),
           ),
-        ),
+
+          // Show "Current Plan" if matched
+          if (isCurrentPlan)
+            Positioned(
+              left: 80, // Adjust this value to move it further left or right
+              top: 13,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.green,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Text(
+                  'Current Plan',
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }

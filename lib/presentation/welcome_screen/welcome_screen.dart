@@ -158,21 +158,15 @@ class WelcomeScreen extends StatelessWidget {
                   SharedPreferences prefs = await SharedPreferences.getInstance();
                   await prefs.setString('guest_device_id', deviceId);
 
-                  // If successful, navigate to the guest home screen
                   Get.toNamed(AppRoutes.guestHome);
                 } catch (e) {
+                  Navigator.of(context).pop();
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text('Guest access finished, please sign up to continue.'),
                       duration: Duration(seconds: 3),
                     ),
                   );
-                } finally {
-                  // Dismiss the loading dialog
-                  SharedPreferences prefs = await SharedPreferences.getInstance();
-                  await prefs.setString('guest_device_id', deviceId);
-                  Navigator.of(context).pop();
-                  Get.toNamed(AppRoutes.guestHome);
                 }
               } else {
                 print('Failed to retrieve device ID');

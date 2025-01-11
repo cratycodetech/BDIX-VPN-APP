@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../routes/routes.dart';
 import '../../service/api/auth_service.dart';
+import '../../utils/scaffold_messenger_utils.dart';
 import '../../utils/validation_utils.dart';
 
 class ResetPasswordScreen extends StatefulWidget {
@@ -18,6 +19,10 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   String? _passwordError;
   String? _confirmPasswordError;
 
+  bool _isPasswordVisible = false;
+  bool _isConfirmPasswordVisible = false;
+
+
   void _resetPassword() async {
     final password = _passwordController.text;
     final confirmPassword = _confirmPasswordController.text;
@@ -30,6 +35,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
     if (_passwordError == null && _confirmPasswordError == null) {
       try {
         await _authService.resetPassword(email: email, newPassword: password);
+        showScaffoldMessage(context, "Password updated successfully");
         Get.toNamed(AppRoutes.signIn);
       } catch (e) {
         Get.snackbar(
@@ -85,7 +91,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
               const SizedBox(height: 10),
               TextFormField(
                 controller: _passwordController,
-                obscureText: true,
+                obscureText: !_isPasswordVisible,
                 decoration: InputDecoration(
                   hintText: 'Enter New Password',
                   hintStyle: const TextStyle(
@@ -93,7 +99,17 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                     color: Color(0xFFDBD2D1),
                   ),
                   prefixIcon: const Icon(Icons.lock_outline, color: Color(0xFFDBD2D1)),
-                  suffixIcon: const Icon(Icons.visibility_off, color: Color(0xFFDBD2D1)),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                      color: const Color(0xFFDBD2D1),
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _isPasswordVisible = !_isPasswordVisible;
+                      });
+                    },
+                  ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(4),
                     borderSide: const BorderSide(
@@ -130,7 +146,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
               const SizedBox(height: 10),
               TextFormField(
                 controller: _confirmPasswordController,
-                obscureText: true,
+                obscureText: !_isConfirmPasswordVisible,
                 decoration: InputDecoration(
                   hintText: 'Confirm New Password',
                   hintStyle: const TextStyle(
@@ -138,7 +154,17 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                     color: Color(0xFFDBD2D1),
                   ),
                   prefixIcon: const Icon(Icons.lock_outline, color: Color(0xFFDBD2D1)),
-                  suffixIcon: const Icon(Icons.visibility_off, color: Color(0xFFDBD2D1)),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _isConfirmPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                      color: const Color(0xFFDBD2D1),
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _isConfirmPasswordVisible = !_isConfirmPasswordVisible;
+                      });
+                    },
+                  ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(4),
                     borderSide: const BorderSide(

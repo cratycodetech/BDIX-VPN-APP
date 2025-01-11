@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 
 import '../../routes/routes.dart';
 import '../../service/api/auth_service.dart';
+import '../../utils/scaffold_messenger_utils.dart';
 import '../../utils/validation_utils.dart';
 
 void main() {
@@ -59,9 +60,9 @@ class _SignUp6State extends State<SignUp6> {
     if (_passwordError == null && _confirmPasswordError == null) {
       try {
         await _authService.signUp(email: email, password: password, flag: true);
+        showScaffoldMessage(context, "Registration successful, Sign In now.");
         Get.toNamed(AppRoutes.guestHome);
       } catch (e) {
-        print("ki somossa $e");
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('This email is already registered, try with new one'),

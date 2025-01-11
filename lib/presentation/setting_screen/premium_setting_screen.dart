@@ -29,6 +29,7 @@ class _PremiumSettingScreenState extends State<PremiumSettingScreen> {
   bool _isConnectOnStartToggled = false;
   bool _isShowNotificationToggled = false;
   bool isGuest = false;
+  bool _isLoggingOut = false;
 
   void _onItemTapped(int index) {
     setState(() {
@@ -100,6 +101,12 @@ class _PremiumSettingScreenState extends State<PremiumSettingScreen> {
   }
 
   Future<void> _logout(BuildContext context) async {
+    if (_isLoggingOut) return;
+
+    setState(() {
+      _isLoggingOut = true;
+    });
+
     if (vpnController.isConnected.value) {
       final shouldDisconnect = await showDialog<bool>(
         context: context,

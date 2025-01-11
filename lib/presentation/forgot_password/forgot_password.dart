@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 
 import '../../routes/routes.dart';
 import '../../service/api/auth_service.dart';
+import '../../utils/scaffold_messenger_utils.dart';
 import '../../utils/validation_utils.dart';
 
 void main() {
@@ -159,7 +160,7 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
                               },
                             );
                           } catch (e) {
-                            Navigator.of(context).pop();
+                            print("ki problem $e");
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
                                 content: Text(
@@ -204,17 +205,8 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
                               AppRoutes.normalLoginProfileScreen,
                             );
                           } catch (e) {
-                            Navigator.of(context).pop();
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  "Email is not registered, try with registered one",
-                                  style: TextStyle(color: Colors.white),
-                                ),
-                                backgroundColor: Colors.red,
-                                duration: Duration(seconds: 2),
-                              ),
-                            );
+                            showScaffoldMessage(context, "Email is registered, try with registered one");
+
                           }
                         } else {
                           ScaffoldMessenger.of(context).showSnackBar(
