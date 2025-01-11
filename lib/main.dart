@@ -13,25 +13,29 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'controllers/openvpn_controller.dart';
 import 'routes/routes.dart';
 import 'package:workmanager/workmanager.dart';
-
-
+import 'background_tasks.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
   MobileAds.instance.initialize();
 
+  // Initialize WorkManager and register the callback dispatcher
+  Workmanager().initialize(
+    callbackDispatcher, // The top-level function from background_tasks.dart
+    isInDebugMode: true, // Change to false for production
+  );
+
+  // Initialize GetX controllers
   final openVpnController = Get.put(OpenVPNController());
   await openVpnController.init();
   final connectivityService = Get.put(ConnectivityService());
-
+  Get.put(TimerNotifier()); // Register TimerNotifier
 
   runApp(ProviderScope(
     child: MyApp(connectivityService: connectivityService),
   ));
 }
-
-
 
 class MyApp extends StatelessWidget {
   final ConnectivityService connectivityService;
@@ -68,9 +72,7 @@ class MyApp extends StatelessWidget {
                 colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
                 useMaterial3: true,
               ),
-              initialRoute: vpnController.isConnected.value
-                  ? AppRoutes.guestHomeScreen
-                  : AppRoutes.splash,
+              initialRoute: AppRoutes.splash,
               getPages: AppRoutes.routes,
               unknownRoute: GetPage(
                 name: '/not-found',
