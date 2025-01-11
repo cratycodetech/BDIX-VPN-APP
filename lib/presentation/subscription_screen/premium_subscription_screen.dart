@@ -1,3 +1,5 @@
+import 'package:bdix_vpn/service/token_service.dart';
+import 'package:bdix_vpn/service/user_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:flutter_sslcommerz/model/SSLCTransactionInfoModel.dart';
@@ -9,6 +11,8 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
+import '../../utils/scaffold_messenger_utils.dart';
+
 class PremiumSubscriptionScreen extends StatefulWidget {
   const PremiumSubscriptionScreen({super.key});
 
@@ -18,6 +22,8 @@ class PremiumSubscriptionScreen extends StatefulWidget {
 }
 
 class _PremiumSubscriptionScreenState extends State<PremiumSubscriptionScreen> {
+  final UserService _userService = UserService();
+  final TokenService _tokenService = TokenService();
   Future<void> _startPayment(String amount, String plan) async {
     try {
       Sslcommerz sslcommerz = Sslcommerz(
@@ -35,6 +41,7 @@ class _PremiumSubscriptionScreenState extends State<PremiumSubscriptionScreen> {
       );
 
       SSLCTransactionInfoModel result = await sslcommerz.payNow();
+      print("Payment result: ${result.toJson()}");
 
       if (result.status == "VALID") {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -42,7 +49,7 @@ class _PremiumSubscriptionScreenState extends State<PremiumSubscriptionScreen> {
         ));
 
         // Make API request after successful payment
-        _sendSubscriptionRequest(plan);
+        await _sendSubscriptionRequest(plan);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text("Payment Failed for $plan!"),
@@ -58,14 +65,19 @@ class _PremiumSubscriptionScreenState extends State<PremiumSubscriptionScreen> {
   Future<void> _sendSubscriptionRequest(String plan) async {
     final String? baseUrl = dotenv.env['BASE_URL'];
     final String apiUrl = "$baseUrl/api/v1/premium-user/create";
-
+    final token = await _tokenService.getToken();
+    final userId = await _tokenService.decodeUserId();
+    print(" ki obostha $userId");
     try {
       final response = await http.post(
         Uri.parse(apiUrl),
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
         body: jsonEncode({
-          "userId": "676c57bcd42b4f1cd2c709e7",
-          "subscriptionType": "1 year",
+          "userId": userId,
+          "subscriptionType": plan,
           "resellerReference": "673df4d593a528af9869a8ec",
         }),
       );
@@ -73,7 +85,9 @@ class _PremiumSubscriptionScreenState extends State<PremiumSubscriptionScreen> {
       if (response.statusCode == 200) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text("Subscription activated for $plan!"),
+
         ));
+        showScaffoldMessage(context, "Login again to get premium access");
       } else {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text("${response.statusCode} Failed to activate subscription: ${response.body}"),
@@ -152,13 +166,13 @@ class _PremiumSubscriptionScreenState extends State<PremiumSubscriptionScreen> {
             child: Column(
               children: [
                 _buildPlanButton(
-                  label: "1 Month",
+                  label: "1 month",
                   price: "BDT 1000/month",
                   amount: "1000",
                 ),
                 const SizedBox(height: 10),
                 _buildPlanButton(
-                  label: "1 Year",
+                  label: "1 year",
                   price: "BDT 4000/year",
                   amount: "4000",
                 ),

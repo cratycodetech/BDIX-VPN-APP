@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../routes/routes.dart';
+import '../../service/api/auth_service.dart';
+import '../../service/user_service.dart';
+import '../../utils/validation_utils.dart';
 
 class SignInScreen extends StatelessWidget {
   SignInScreen({Key? key}) : super(key: key);
@@ -10,6 +13,9 @@ class SignInScreen extends StatelessWidget {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final AuthService _authService = AuthService();
+  final UserService _userService = UserService();
+
 
   @override
   Widget build(BuildContext context) {
@@ -54,7 +60,7 @@ class SignInScreen extends StatelessWidget {
                     alignment: Alignment.centerRight,
                     child: GestureDetector(
                       onTap: () {
-                        // Forgot password action
+
                         Get.toNamed(AppRoutes.forgotPassword);
                       },
                       child: const Text(
@@ -79,9 +85,45 @@ class SignInScreen extends StatelessWidget {
                           borderRadius: BorderRadius.circular(10),
                         ),
                       ),
-                      onPressed: () {
-                        // Sign In action
+                      onPressed: () async {
+                        final emailValidation = ValidationUtils.validateEmail(emailController.text);
+                        final passwordValidation = ValidationUtils.validatePassword(passwordController.text);
+
+                        if (emailValidation != null || passwordValidation != null) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(emailValidation ?? passwordValidation!)),
+                          );
+                          return;
+                        }
+
+                        showDialog(
+                          context: context,
+                          barrierDismissible: false,
+                          builder: (context) => const Center(child: CircularProgressIndicator()),
+                        );
+
+                        try {
+                          final userType = await _authService.login(
+                            email: emailController.text,
+                            password: passwordController.text,
+                          );
+
+                          if (userType == "Premium") {
+                            await _userService.storeUserType(userType!);
+                            print('User type: $userType');
+                          }
+
+                          Navigator.of(context).pop();
+                          Get.toNamed(AppRoutes.guestHome);
+
+                        } catch (e) {
+                          Navigator.of(context).pop();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text("Email or password is not correct")),
+                          );
+                        }
                       },
+
                       child: const Text(
                         "Sign in",
                         style: TextStyle(
@@ -113,7 +155,8 @@ class SignInScreen extends StatelessWidget {
                           ),
                           recognizer: TapGestureRecognizer()
                             ..onTap = () {
-                              // Create account action
+                              Get.toNamed(
+                                AppRoutes.signUp1);
                             },
                         ),
                       ],

@@ -1,63 +1,114 @@
+import 'dart:async';
+
+import 'package:bdix_vpn/service/device_service.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get/get.dart';
+import '../../models/user_preferences.dart';
+import '../../providers/timer_provider.dart';
 import '../../routes/routes.dart';
+import '../../service/database/database_helper.dart';
+import '../../service/user_service.dart';
 import '../../widgets/bottomNavigationBar_widget.dart';
 import '../../widgets/topAppBar_widget.dart';
 import '../../controllers/openvpn_controller.dart';
-import '../home_screen/normal_home_connect_screen.dart';
+import 'guest_home_screen.dart';
 
-class GuestHome extends StatefulWidget {
-  const GuestHome({Key? key}) : super(key: key);
+class GuestHome extends ConsumerStatefulWidget {
+  const GuestHome({super.key});
 
   @override
-  State<GuestHome> createState() => _GuestHomeState();
+  ConsumerState<GuestHome> createState() => _GuestHomeState();
 }
 
-class _GuestHomeState extends State<GuestHome> {
+class _GuestHomeState extends ConsumerState<GuestHome> {
   final OpenVPNController vpnController =
-      Get.find<OpenVPNController>(); // Access the OpenVPNController
+  Get.find<OpenVPNController>();
+  final UserService _userService = UserService();
+  final DeviceService _deviceService = DeviceService();
+  bool isPremium = false;
+  bool isCurrentScreen = true;
+  bool isGuest = false;
+
 
   @override
   void initState() {
     super.initState();
     _loadConfig();
     _observeConnection();
+    _loadUserType();
+    _conditionalStartVPN();
+    _initializeGuestStatus();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    isCurrentScreen = false;
+  }
+
+  Future<void> _initializeGuestStatus() async {
+    isGuest = await _deviceService.checkGuestStatus();
+    setState(() {});
+  }
+
+  Future<void> _loadUserType() async {
+    bool userType = await _userService.getUserType();
+    setState(() {
+      isPremium = userType;
+    });
   }
 
   Future<void> _loadConfig() async {
     final loadedConfig =
-        await DefaultAssetBundle.of(context).loadString('assets/client1.ovpn');
-    vpnController.vpnConfig.value = loadedConfig; // Update the controller's config
+    await DefaultAssetBundle.of(context).loadString('assets/VPNFile/client1.ovpn');
+    vpnController.vpnConfig.value = loadedConfig;
   }
 
   void _observeConnection() {
-    // Observe the connection status and navigate when connected
     vpnController.isConnected.listen((connected) {
-      if (connected) {
-        // Navigate to GuestHomeScreen when connected
-        Future.microtask(() => Get.off(() => GuestHomeScreen(engine: vpnController.engine)));
+      print("connected status $connected");
+      if (connected ) {
+        //isCurrentScreen= false;
+        ref.read(timerProvider.notifier).startTimer();
+        Get.offAll(const GuestHomeScreen());
       }
     });
   }
 
+  Future<void> _conditionalStartVPN() async {
+    try{
+      final DatabaseHelper dbHelper = DatabaseHelper();
+      final String? userId = await _userService.getUserId();
+      final UserPreferences? preferences = await dbHelper.getUserPreferences(userId!);
+
+      if (preferences?.connectOnStart == true){
+        vpnController.connect();
+      }
+    } catch (e) {
+      print("Error starting VPN: $e");
+    }
+  }
+
   Future<void> _startVPN() async {
     try {
-    vpnController.connect();// Use controller's connect method
-    print("VPN Connection Started...");
-  } catch (e) {
-    print("Error starting VPN: $e");
-  } 
+      vpnController.connect();
+      print("VPN Connection Started...");
+    } catch (e) {
+      print("Error starting VPN: $e");
+    }
   }
 
   void _stopVPN() {
-    vpnController.disconnect(); // Use controller's disconnect method
+    vpnController.disconnect();
   }
 
   @override
   Widget build(BuildContext context) {
+
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: const TopAppBar(),
+      appBar: TopAppBar(isPremium: isPremium,isGuest: isGuest),
       body: Obx(() {
         return Column(
           children: [
@@ -103,7 +154,7 @@ class _GuestHomeState extends State<GuestHome> {
                       }
                     },
                     borderRadius:
-                        BorderRadius.circular(50), // Circular ripple effect
+                    BorderRadius.circular(50), // Circular ripple effect
                     child: Stack(
                       alignment: Alignment.center,
                       children: [
@@ -145,8 +196,8 @@ class _GuestHomeState extends State<GuestHome> {
                     vpnController.isConnected.value
                         ? 'Connected'
                         : (vpnController.vpnStage.value == "Connecting..."
-                            ? 'Connecting...'
-                            : 'Tap to Connect'),
+                        ? 'Connecting...'
+                        : 'Tap to Connect'),
                     style: const TextStyle(
                       color: Color(0xFF080E59),
                       fontSize: 24,

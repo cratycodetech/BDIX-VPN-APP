@@ -13,7 +13,7 @@ class one_time_splash_screen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GetMaterialApp(
+    return const GetMaterialApp(
       debugShowCheckedModeBanner: false,
       home: OneTimeSplashScreen(),
     );
@@ -21,6 +21,8 @@ class one_time_splash_screen extends StatelessWidget {
 }
 
 class OneTimeSplashScreen extends StatelessWidget {
+  const OneTimeSplashScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -38,8 +40,8 @@ class OneTimeSplashScreen extends StatelessWidget {
           ),
           const SizedBox(height: 30),
           // Terms and Conditions Text
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16),
             child: Text(
               'By tapping "Agree & Continue," you confirm that you have read and accept our Terms & Conditions and Privacy Policy. We are committed to protecting your data with end-to-end encryption and a strict no-logs policy. You agree to use the VPN responsibly and in compliance with applicable laws. Some features, such as premium server access, are available through paid subscription plans, and payments may involve trusted third-party providers. By proceeding, you also agree to receive service-related updates and notifications.',
               textAlign: TextAlign.center,
@@ -82,12 +84,12 @@ class OneTimeSplashScreen extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           // Footer Text with Links
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16),
             child: Text.rich(
               TextSpan(
                 children: [
-                  const TextSpan(
+                  TextSpan(
                     text: 'For full details, please check our ',
                     style: TextStyle(
                       fontSize: 10,
@@ -97,13 +99,13 @@ class OneTimeSplashScreen extends StatelessWidget {
                   ),
                   TextSpan(
                     text: 'Terms & Conditions',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 10,
                       fontFamily: 'Nunito',
                       color: Color(0xFFEC8304),
                     ),
                   ),
-                  const TextSpan(
+                  TextSpan(
                     text: ' and ',
                     style: TextStyle(
                       fontSize: 10,
@@ -113,13 +115,13 @@ class OneTimeSplashScreen extends StatelessWidget {
                   ),
                   TextSpan(
                     text: 'Privacy Policy',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 10,
                       fontFamily: 'Nunito',
                       color: Color(0xFFEC8304),
                     ),
                   ),
-                  const TextSpan(
+                  TextSpan(
                     text: ' before continuing.',
                     style: TextStyle(
                       fontSize: 10,

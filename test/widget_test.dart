@@ -9,11 +9,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:bdix_vpn/main.dart';
+import 'mock_connectivity.dart'; // Import your mock
 
 void main() {
   testWidgets('Counter increments smoke test', (WidgetTester tester) async {
     // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+        final mockConnectivityService = MockConnectivityService();
+
+    // 2. Control the connectivity stream (optional, for specific tests)
+    mockConnectivityService.emitConnectivityStatus(true); // Simulate connected
+    await tester.pumpWidget(MyApp(connectivityService: mockConnectivityService));
 
     // Verify that our counter starts at 0.
     expect(find.text('0'), findsOneWidget);
