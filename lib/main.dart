@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:bdix_vpn/presentation/connection_screen/connection_failed_screen.dart';
+import 'package:bdix_vpn/service/background/timer_background_service.dart';
 import 'package:bdix_vpn/service/connectivity_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -10,11 +11,17 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'controllers/openvpn_controller.dart';
 import 'routes/routes.dart';
+import 'package:workmanager/workmanager.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
   MobileAds.instance.initialize();
+
+  Workmanager().initialize(
+    callbackDispatcher,
+    isInDebugMode: true,
+  );
 
   final openVpnController = Get.put(OpenVPNController());
   await openVpnController.init();
@@ -25,12 +32,26 @@ Future<void> main() async {
   if (isFirstLaunch) {
     await prefs.setBool('isFirstLaunch', false);
   }
-  runApp(ProviderScope(
-    child: MyApp(
-      connectivityService: connectivityService,
-      initialRoute: isFirstLaunch ? AppRoutes.splash : AppRoutes.welcome,
+
+  final token = prefs.getString('accessToken');
+
+  String initialRoute;
+  if (isFirstLaunch) {
+    initialRoute = AppRoutes.splash;
+  } else if (token != null) {
+    initialRoute = AppRoutes.guestHome;
+  } else {
+    initialRoute = AppRoutes.welcome;
+  }
+
+  runApp(
+    ProviderScope(
+      child: MyApp(
+        connectivityService: connectivityService,
+        initialRoute: initialRoute,
+      ),
     ),
-  ));
+  );
 }
 
 class MyApp extends StatefulWidget {

@@ -4,6 +4,7 @@ import 'package:bdix_vpn/service/device_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../models/user_preferences.dart';
 import '../../providers/timer_provider.dart';
 import '../../routes/routes.dart';
@@ -29,12 +30,15 @@ class _GuestHomeState extends ConsumerState<GuestHome> {
   bool isPremium = false;
   bool isCurrentScreen = true;
   bool isGuest = false;
+  DateTime? sessionStartTime;
+
 
 
   @override
   void initState() {
     super.initState();
     _loadConfig();
+
     _observeConnection();
     _loadUserType();
     _conditionalStartVPN();
@@ -48,6 +52,7 @@ class _GuestHomeState extends ConsumerState<GuestHome> {
   }
 
   Future<void> _initializeGuestStatus() async {
+
     isGuest = await _deviceService.checkGuestStatus();
     setState(() {});
   }
@@ -66,15 +71,27 @@ class _GuestHomeState extends ConsumerState<GuestHome> {
   }
 
   void _observeConnection() {
-    vpnController.isConnected.listen((connected) {
+
+    vpnController.isConnected.listen((connected) async {
       print("connected status $connected");
-      if (connected ) {
+      if (connected) {
+        ref.read(timerProvider.notifier).resetTimer();
+        await Future.delayed(const Duration(milliseconds: 300));
         //isCurrentScreen= false;
+        ref.read(timerProvider.notifier).resetTimer();
         ref.read(timerProvider.notifier).startTimer();
-        Get.offAll(const GuestHomeScreen());
+        sessionStartTime= DateTime.now();
+        _saveSessionStartTime(sessionStartTime!);
+        Get.offAll(() => const GuestHomeScreen());
       }
     });
   }
+
+  Future<void> _saveSessionStartTime(DateTime sessionTime) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('session_start_time', sessionTime.toIso8601String());
+  }
+
 
   Future<void> _conditionalStartVPN() async {
     try{

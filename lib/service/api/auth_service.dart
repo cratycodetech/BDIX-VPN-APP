@@ -11,7 +11,7 @@ class AuthService {
   Future<void> sendOTP({
     required String email,
   }) async {
-    final url = Uri.parse('$baseUrl/api/v1/auth/forget-password');
+    final url = Uri.parse('$baseUrl/api/v1/auth/send-otp');
     final response = await http.post(
       url,
       headers: {'Content-Type': 'application/json'},
@@ -28,7 +28,7 @@ class AuthService {
   Future<void> sendOTPForForgetPassword({
     required String email,
   }) async {
-    final url = Uri.parse('$baseUrl/api/v1/auth//forget-password');
+    final url = Uri.parse('$baseUrl/api/v1/auth/forget-password');
     final response = await http.post(
       url,
       headers: {'Content-Type': 'application/json'},

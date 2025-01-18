@@ -4,6 +4,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../advertisment/reworded_ad.dart';
 import '../../controllers/openvpn_controller.dart';
 import '../../routes/routes.dart';
@@ -13,7 +14,6 @@ import '../../service/user_service.dart';
 import '../../utils/scaffold_messenger_utils.dart';
 import '../../utils/speed_utils.dart';
 import '../../widgets/bottomNavigationBar_widget.dart';
-import '../../widgets/normal_user_restriction.dart';
 import '../../widgets/rewarded_ad_dialog.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/timer_provider.dart';
@@ -22,6 +22,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class GuestHomeScreen extends ConsumerStatefulWidget {
+
   const GuestHomeScreen({super.key});
 
   @override
@@ -39,6 +40,7 @@ class _GuestHomeScreenState extends ConsumerState<GuestHomeScreen> {
   final DeviceService _deviceService = DeviceService();
   bool isNotPremium = false;
   bool isGuest = false;
+
   DateTime? sessionStartTime;
   DateTime? sessionEndTime;
 
@@ -57,7 +59,6 @@ class _GuestHomeScreenState extends ConsumerState<GuestHomeScreen> {
 
     int? dataUsedBytes = await _speed.stopMonitoring();
 
-    print('ki obostha Data use in guest $dataUsedBytes');
 
     final dbHelper = DatabaseHelper();
     await dbHelper.insertSession(
@@ -70,7 +71,7 @@ class _GuestHomeScreenState extends ConsumerState<GuestHomeScreen> {
     try {
       String publicIP = "Unknown";
       final response =
-          await http.get(Uri.parse('https://api64.ipify.org?format=json'));
+      await http.get(Uri.parse('https://api64.ipify.org?format=json'));
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         publicIP = data['ip'] ?? "Unknown";
@@ -111,6 +112,17 @@ class _GuestHomeScreenState extends ConsumerState<GuestHomeScreen> {
     }
   }
 
+  Future<void> _loadSessionStartTime() async {
+    final prefs = await SharedPreferences.getInstance();
+    String? storedTime = prefs.getString('session_start_time');
+    if (storedTime != null) {
+      setState(() {
+        sessionStartTime = DateTime.parse(storedTime);
+      });
+    }
+  }
+
+
   void _loadRewardedAd() {
     _rewardedAdManager.loadRewardedAd(
       onAdLoaded: () {
@@ -128,12 +140,13 @@ class _GuestHomeScreenState extends ConsumerState<GuestHomeScreen> {
     MobileAds.instance.initialize();
     _rewardedAdManager = RewardedAdManager();
     _loadRewardedAd();
-    //ref.read(timerProvider.notifier).startTimer();
     _speed.startMonitoring();
     _startTrafficStatsUpdate();
     _loadUserType();
     _initializeGuestStatus();
-    sessionStartTime = DateTime.now();
+    _loadSessionStartTime();
+
+
   }
 
   @override
@@ -186,19 +199,26 @@ class _GuestHomeScreenState extends ConsumerState<GuestHomeScreen> {
     });
   }
 
-  String _formatDuration(Duration duration) {
-    String twoDigits(int n) => n.toString().padLeft(2, '0');
-    String hours = twoDigits(duration.inHours);
-    String minutes = twoDigits(duration.inMinutes.remainder(60));
-    String seconds = twoDigits(duration.inSeconds.remainder(60));
-    return "$hours:$minutes:$seconds";
-  }
+
 
   @override
   Widget build(BuildContext context) {
+
+    final remainingTime = Duration(seconds: ref.watch(timerProvider));
+
+    print("Remaining time: ${_formatDuration(remainingTime)}");
+
     ref.listen<int>(timerProvider, (previous, next) {
       setState(() {});
     });
+    if (isNotPremium && !isGuest) {
+      ref.listen<int>(timerProvider, (previous, next) {
+        if (next <= 0) {
+          _disconnectVPN();
+        }
+      });
+    }
+
     if (isGuest || isNotPremium) {
       ref.listen<int>(timerProvider, (previous, next) {
         if (ref.watch(timerProvider.notifier).shouldShowAd) {
@@ -214,14 +234,6 @@ class _GuestHomeScreenState extends ConsumerState<GuestHomeScreen> {
         if (ref.read(timerProvider.notifier).signUpDialogShow) {
           vpnController.disconnect();
           showSignUpDialog(context,true);
-          ref.read(timerProvider.notifier).resetAdFlag();
-        }
-      });
-    }
-    if (isNotPremium && !isGuest) {
-      ref.listen<int>(timerProvider, (previous, next) {
-        if (ref.read(timerProvider.notifier).normalSignUpDialogShow) {
-          normalUserRestrictionUpDialog(context);
           ref.read(timerProvider.notifier).resetAdFlag();
         }
       });
@@ -428,7 +440,7 @@ class _GuestHomeScreenState extends ConsumerState<GuestHomeScreen> {
                             Expanded(
                               child: ElevatedButton(
                                 onPressed: () {
-
+                                  _showRewardedAd();
                                 },
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: const Color(0xFFEC8304),
@@ -522,5 +534,13 @@ class _GuestHomeScreenState extends ConsumerState<GuestHomeScreen> {
         onTap: _onItemTapped,
       ),
     );
+  }
+
+  String _formatDuration(Duration duration) {
+    String twoDigits(int n) => n.toString().padLeft(2, '0');
+    String hours = twoDigits(duration.inHours);
+    String minutes = twoDigits(duration.inMinutes.remainder(60));
+    String seconds = twoDigits(duration.inSeconds.remainder(60));
+    return "$hours:$minutes:$seconds";
   }
 }

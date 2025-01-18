@@ -103,9 +103,7 @@ class _PremiumSettingScreenState extends State<PremiumSettingScreen> {
   Future<void> _logout(BuildContext context) async {
     if (_isLoggingOut) return;
 
-    setState(() {
-      _isLoggingOut = true;
-    });
+
 
     if (vpnController.isConnected.value) {
       final shouldDisconnect = await showDialog<bool>(
@@ -113,7 +111,11 @@ class _PremiumSettingScreenState extends State<PremiumSettingScreen> {
         builder: (context) => const DisconnectDialog(),
       );
 
-      if (shouldDisconnect == true) {
+
+        if (shouldDisconnect == true) {
+          setState(() {
+            _isLoggingOut = true;
+          });
         try {
           await _userService.removeUserType();
           await _authService.logout();
@@ -129,6 +131,9 @@ class _PremiumSettingScreenState extends State<PremiumSettingScreen> {
         }
       }
     } else {
+      setState(() {
+        _isLoggingOut = true;
+      });
       try {
         await _userService.removeUserType();
         await _authService.logout();

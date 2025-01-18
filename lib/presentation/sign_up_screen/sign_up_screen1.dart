@@ -122,6 +122,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           arguments: {'email': emailController.text},
                         );
                       } catch (e) {
+                        print(" ki somossa $e");
                         Navigator.of(context).pop();
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(

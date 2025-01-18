@@ -139,7 +139,7 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
                             ValidationUtils.validateEmail(emailController.text);
                         if (emailError == null) {
                           try {
-                            await _authService.sendOTP(
+                            await _authService.sendOTPForForgetPassword(
                                 email: emailController.text);
 
                             ScaffoldMessenger.of(context).showSnackBar(
@@ -160,7 +160,6 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
                               },
                             );
                           } catch (e) {
-                            print("ki problem $e");
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
                                 content: Text(
