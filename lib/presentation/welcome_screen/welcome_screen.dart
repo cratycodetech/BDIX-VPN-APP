@@ -6,6 +6,7 @@ import '../../routes/routes.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 
 import '../../service/api/auth_service.dart';
+import '../../utils/scaffold_messenger_utils.dart';
 
 
 void main() {
@@ -135,38 +136,35 @@ class WelcomeScreen extends StatelessWidget {
             onPressed: () async {
               DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
               AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
-
-              String? deviceId = androidInfo.id; // Fetch unique device ID
+              String? deviceId = androidInfo.id;
 
               if (deviceId != null) {
-                print('Device ID: $deviceId'); // Log or use it as needed
+                print('Device ID: $deviceId');
 
-                // Show loading indicator
+
                 showDialog(
                   context: context,
-                  barrierDismissible: false, // Prevent dismissing the dialog by tapping outside
+                  barrierDismissible: false,
                   builder: (context) => const Center(
                     child: CircularProgressIndicator(),
                   ),
                 );
 
                 try {
-                  // Call guestUser method
-                  await AuthService().guestUser(deviceId: deviceId);
+                  await AuthService().guestUserExistence(deviceId: deviceId);
 
-                  // Store the device ID locally in shared preferences
                   SharedPreferences prefs = await SharedPreferences.getInstance();
                   await prefs.setString('guest_device_id', deviceId);
-
+                  await prefs.setBool('showMoreAd', true);
+                  bool showMoreAd = prefs.getBool('showMoreAd') ?? false;
+                  print('showMoreAd: $showMoreAd');
+                  showScaffoldMessage(context, "Since free guest access finished, you will see frequent ad, for ad free experience try sign in");
                   Get.toNamed(AppRoutes.guestHome);
                 } catch (e) {
                   Navigator.of(context).pop();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Guest access finished, please sign up to continue.'),
-                      duration: Duration(seconds: 3),
-                    ),
-                  );
+                  SharedPreferences prefs = await SharedPreferences.getInstance();
+                  await prefs.setString('guest_device_id', deviceId);
+                  Get.toNamed(AppRoutes.guestHome);
                 }
               } else {
                 print('Failed to retrieve device ID');

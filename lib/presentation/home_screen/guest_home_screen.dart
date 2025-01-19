@@ -206,7 +206,6 @@ class _GuestHomeScreenState extends ConsumerState<GuestHomeScreen> {
 
     final remainingTime = Duration(seconds: ref.watch(timerProvider));
 
-    print("Remaining time: ${_formatDuration(remainingTime)}");
 
     ref.listen<int>(timerProvider, (previous, next) {
       setState(() {});
@@ -229,7 +228,6 @@ class _GuestHomeScreenState extends ConsumerState<GuestHomeScreen> {
     }
 
     if (isGuest) {
-      print("ki value $isGuest");
       ref.listen<int>(timerProvider, (previous, next) {
         if (ref.read(timerProvider.notifier).signUpDialogShow) {
           vpnController.disconnect();

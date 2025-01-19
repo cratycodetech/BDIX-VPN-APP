@@ -35,10 +35,12 @@ Future<void> main() async {
 
   final token = prefs.getString('accessToken');
 
+  final deviceId = prefs.getString('guest_device_id');
+
   String initialRoute;
   if (isFirstLaunch) {
     initialRoute = AppRoutes.splash;
-  } else if (token != null) {
+  } else if (token != null || deviceId != null) {
     initialRoute = AppRoutes.guestHome;
   } else {
     initialRoute = AppRoutes.welcome;

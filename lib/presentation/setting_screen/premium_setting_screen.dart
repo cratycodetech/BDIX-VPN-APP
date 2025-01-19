@@ -10,6 +10,8 @@ import '../../service/database/database_helper.dart';
 import '../../service/device_service.dart';
 import '../../widgets/bottomNavigationBar_widget.dart';
 import '../../widgets/disconnect_dialog_box.dart';
+import '../sign_in_screen/sign_in_screen.dart';
+import '../sign_up_screen/sign_up_screen1.dart';
 
 class PremiumSettingScreen extends StatefulWidget {
   const PremiumSettingScreen({super.key});
@@ -24,6 +26,7 @@ class _PremiumSettingScreenState extends State<PremiumSettingScreen> {
   final UserService _userService = UserService();
   final DeviceService _deviceService = DeviceService();
   final AuthService _authService = AuthService();
+  final DeviceService deviceService = DeviceService();
   final OpenVPNController vpnController = Get.find<OpenVPNController>();
   bool _isKillSwitchToggled = false;
   bool _isConnectOnStartToggled = false;
@@ -68,7 +71,8 @@ class _PremiumSettingScreenState extends State<PremiumSettingScreen> {
       connectOnStart: _isConnectOnStartToggled,
       showNotification: _isShowNotificationToggled,
     );
-    UserPreferences? existingPreferences = await DatabaseHelper().getUserPreferences(userId);
+    UserPreferences? existingPreferences =
+        await DatabaseHelper().getUserPreferences(userId);
     if (existingPreferences != null) {
       await DatabaseHelper().updateUserPreferences(preferences);
     } else {
@@ -100,10 +104,35 @@ class _PremiumSettingScreenState extends State<PremiumSettingScreen> {
     }
   }
 
+  Future<void> _logoutForGuest(BuildContext context, bool isForSignup)async {
+    if (vpnController.isConnected.value) {
+      final shouldDisconnect = await showDialog<bool>(
+        context: context,
+        builder: (context) => const DisconnectDialog(),
+      );
+
+      if (shouldDisconnect == true) {
+        deviceService.removeDeviceId();
+        if(isForSignup)
+          {
+            Get.offAll(const SignUpScreen());
+          }else{
+          Get.offAll(SignInScreen());
+        }
+      }
+    }else{
+      deviceService.removeDeviceId();
+      if(isForSignup)
+      {
+        Get.offAll(const SignUpScreen());
+      }else{
+        Get.offAll(SignInScreen());
+      }
+    }
+  }
+
   Future<void> _logout(BuildContext context) async {
     if (_isLoggingOut) return;
-
-
 
     if (vpnController.isConnected.value) {
       final shouldDisconnect = await showDialog<bool>(
@@ -111,11 +140,10 @@ class _PremiumSettingScreenState extends State<PremiumSettingScreen> {
         builder: (context) => const DisconnectDialog(),
       );
 
-
-        if (shouldDisconnect == true) {
-          setState(() {
-            _isLoggingOut = true;
-          });
+      if (shouldDisconnect == true) {
+        setState(() {
+          _isLoggingOut = true;
+        });
         try {
           await _userService.removeUserType();
           await _authService.logout();
@@ -428,6 +456,62 @@ class _PremiumSettingScreenState extends State<PremiumSettingScreen> {
                 ],
               ),
             ],
+            if (isGuest) ...[
+              const SizedBox(
+                height: 50,
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // Sign In Button
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () => _logoutForGuest(context, false),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF393E7A),
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        child: const Text(
+                          'Sign In',
+                          style: TextStyle(
+                            color: Color(0xFFE6E7EE),
+                            fontSize: 16,
+                            fontFamily: 'Nunito',
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    // Sign Up Button
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => _logoutForGuest(context, true),
+                        style: OutlinedButton.styleFrom(
+                          side: const BorderSide(color: Color(0xFF080E59)),
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        child: const Text(
+                          'Sign Up',
+                          style: TextStyle(
+                            color: Color(0xFF080E59),
+                            fontSize: 16,
+                            fontFamily: 'Nunito',
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ]
           ],
         ),
       ),

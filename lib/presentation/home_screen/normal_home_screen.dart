@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../advertisment/reworded_ad.dart';
 import '../../models/user_preferences.dart';
 import '../../providers/timer_provider.dart';
 import '../../routes/routes.dart';
@@ -27,10 +28,12 @@ class _GuestHomeState extends ConsumerState<GuestHome> {
   Get.find<OpenVPNController>();
   final UserService _userService = UserService();
   final DeviceService _deviceService = DeviceService();
+  final RewardedAdManager _rewardedAdManager = RewardedAdManager();
   bool isPremium = false;
   bool isCurrentScreen = true;
   bool isGuest = false;
   DateTime? sessionStartTime;
+  bool showMoreAd = false;
 
 
 
@@ -43,12 +46,37 @@ class _GuestHomeState extends ConsumerState<GuestHome> {
     _loadUserType();
     _conditionalStartVPN();
     _initializeGuestStatus();
+    _loadRewardedAd();
+    _loadAdPreferences();
   }
 
   @override
   void dispose() {
     super.dispose();
     isCurrentScreen = false;
+  }
+
+  Future<void> _loadRewardedAd() async {
+    _rewardedAdManager.loadRewardedAd(
+      onAdLoaded: () => print('Rewarded ad loaded.'),
+      onAdFailed: () => print('Failed to load rewarded ad.'),
+    );
+  }
+
+  Future<void> _loadAdPreferences() async {
+    final prefs = await SharedPreferences.getInstance();
+    showMoreAd = prefs.getBool('showMoreAd') ?? false;
+    setState(() {});
+  }
+
+  void _showRewardedAd() {
+    _rewardedAdManager.showRewardedAd(
+      context: context,
+      onRewardEarned: () {
+        print('User earned reward for watching the ad.');
+        // Add logic for what happens when the reward is earned
+      },
+    );
   }
 
   Future<void> _initializeGuestStatus() async {
@@ -77,11 +105,14 @@ class _GuestHomeState extends ConsumerState<GuestHome> {
       if (connected) {
         ref.read(timerProvider.notifier).resetTimer();
         await Future.delayed(const Duration(milliseconds: 300));
-        //isCurrentScreen= false;
         ref.read(timerProvider.notifier).resetTimer();
         ref.read(timerProvider.notifier).startTimer();
         sessionStartTime= DateTime.now();
         _saveSessionStartTime(sessionStartTime!);
+        print("ki obostha? $showMoreAd");
+        if (isGuest && showMoreAd) {
+          _showRewardedAd();
+        }
         Get.offAll(() => const GuestHomeScreen());
       }
     });

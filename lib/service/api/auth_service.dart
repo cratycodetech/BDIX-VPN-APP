@@ -172,4 +172,18 @@ class AuthService {
           errorResponse['message'] ?? 'You have used once please sign in');
     }
   }
+
+  Future<void> guestUserExistence({required String deviceId}) async {
+    final url = Uri.parse('$baseUrl/api/v1/guest/check-device/$deviceId');
+    final response = await http.get(
+      url,
+      headers: {'Content-Type': 'application/json'},
+    );
+
+    if (response.statusCode != 200) {
+      final errorResponse = jsonDecode(response.body);
+      throw Exception(
+          errorResponse['message'] ?? 'You have used once please sign in');
+    }
+  }
 }
