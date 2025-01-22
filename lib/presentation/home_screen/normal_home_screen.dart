@@ -1,9 +1,12 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:bdix_vpn/service/device_service.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get/get.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../advertisment/reworded_ad.dart';
 import '../../models/user_preferences.dart';
@@ -41,13 +44,13 @@ class _GuestHomeState extends ConsumerState<GuestHome> {
   void initState() {
     super.initState();
     _loadConfig();
-
     _observeConnection();
     _loadUserType();
     _conditionalStartVPN();
     _initializeGuestStatus();
     _loadRewardedAd();
     _loadAdPreferences();
+
   }
 
   @override
@@ -55,6 +58,13 @@ class _GuestHomeState extends ConsumerState<GuestHome> {
     super.dispose();
     isCurrentScreen = false;
   }
+
+
+
+
+
+
+
 
   Future<void> _loadRewardedAd() async {
     _rewardedAdManager.loadRewardedAd(

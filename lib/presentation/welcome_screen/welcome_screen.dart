@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:platform/platform.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../routes/routes.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 
 import '../../service/api/auth_service.dart';
+import '../../service/windows_service.dart';
 import '../../utils/scaffold_messenger_utils.dart';
 
 
@@ -134,41 +137,87 @@ class WelcomeScreen extends StatelessWidget {
           // Continue as Guest Button
           TextButton(
             onPressed: () async {
-              DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
-              AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
-              String? deviceId = androidInfo.id;
-
-              if (deviceId != null) {
-                print('Device ID: $deviceId');
 
 
-                showDialog(
-                  context: context,
-                  barrierDismissible: false,
-                  builder: (context) => const Center(
-                    child: CircularProgressIndicator(),
-                  ),
-                );
+              const platform = LocalPlatform();
 
-                try {
-                  await AuthService().guestUserExistence(deviceId: deviceId);
+              if (platform.isAndroid) {
 
-                  SharedPreferences prefs = await SharedPreferences.getInstance();
-                  await prefs.setString('guest_device_id', deviceId);
-                  await prefs.setBool('showMoreAd', true);
-                  bool showMoreAd = prefs.getBool('showMoreAd') ?? false;
-                  print('showMoreAd: $showMoreAd');
-                  showScaffoldMessage(context, "Since free guest access finished, you will see frequent ad, for ad free experience try sign in");
-                  Get.toNamed(AppRoutes.guestHome);
-                } catch (e) {
-                  Navigator.of(context).pop();
-                  SharedPreferences prefs = await SharedPreferences.getInstance();
-                  await prefs.setString('guest_device_id', deviceId);
-                  Get.toNamed(AppRoutes.guestHome);
+                DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+                AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
+                String? deviceId = androidInfo.id;
+
+                if (deviceId != null) {
+                  print('Device ID: $deviceId');
+
+
+                  showDialog(
+                    context: context,
+                    barrierDismissible: false,
+                    builder: (context) => const Center(
+                      child: CircularProgressIndicator(),
+                    ),
+                  );
+
+                  try {
+
+
+
+                    await AuthService().guestUserExistence(deviceId: deviceId);
+
+                    SharedPreferences prefs = await SharedPreferences.getInstance();
+                    await prefs.setString('guest_device_id', deviceId);
+                    await prefs.setBool('showMoreAd', true);
+                    bool showMoreAd = prefs.getBool('showMoreAd') ?? false;
+                    print('showMoreAd: $showMoreAd');
+                    showScaffoldMessage(context, "Since free guest access finished, you will see frequent ad, for ad free experience try sign in");
+                    Get.toNamed(AppRoutes.guestHome);
+                  } catch (e) {
+                    Navigator.of(context).pop();
+                    SharedPreferences prefs = await SharedPreferences.getInstance();
+                    await prefs.setString('guest_device_id', deviceId);
+                    Get.toNamed(AppRoutes.guestHome);
+                  }
+                } else {
+                  print('Failed to retrieve device ID');
                 }
-              } else {
-                print('Failed to retrieve device ID');
+              }else if (platform.isWindows){
+                String userKey = await KeyStorage.getUserKey();  // Get the user key
+                print("Windows User Key: $userKey");
+
+                if (userKey != null) {
+                  print('Windows Machine GUID: $userKey');
+
+                  showDialog(
+                    context: context,
+                    barrierDismissible: false,
+                    builder: (context) => const Center(
+                      child: CircularProgressIndicator(),
+                    ),
+                  );
+
+                  try {
+                    await AuthService().guestUserExistence(deviceId: userKey);
+
+                    SharedPreferences prefs = await SharedPreferences.getInstance();
+                    await prefs.setString('guest_device_id', userKey);
+                    await prefs.setBool('showMoreAd', true);
+                    bool showMoreAd = prefs.getBool('showMoreAd') ?? false;
+                    print('showMoreAd: $showMoreAd');
+                    showScaffoldMessage(context, "Since free guest access finished, you will see frequent ad, for ad-free experience try sign in");
+                    Get.toNamed(AppRoutes.guestHome);
+                  } catch (e) {
+                    Navigator.of(context).pop();
+                    SharedPreferences prefs = await SharedPreferences.getInstance();
+                    await prefs.setString('guest_device_id', userKey);
+                    Get.toNamed(AppRoutes.guestHome);
+                  }
+                } else {
+                  print('Failed to retrieve Machine GUID');
+                }
               }
+
+
             },
             child: const Text(
               'Continue as a Guest',

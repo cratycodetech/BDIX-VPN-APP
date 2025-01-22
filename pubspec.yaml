@@ -56,6 +56,9 @@ dependencies:
   permission_handler: ^11.3.1
   workmanager: ^0.5.2
   device_preview: ^1.2.0
+  platform: ^3.1.6
+  uuid: ^3.0.5
+  path_provider: ^2.1.5
 
 
 
