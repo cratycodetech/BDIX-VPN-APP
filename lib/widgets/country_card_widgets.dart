@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/country_controller.dart';
 import '../controllers/openvpn_controller.dart';
+import '../routes/routes.dart';
 
 class CountrySpeedCard extends StatelessWidget {
   final String countryName;
   final String flagAsset;
-  final String speed; // Dynamic speed value (ping)
+  final String speed;
   final Color networkIconColor;
+  final bool isGuest;
 
   const CountrySpeedCard({
     super.key,
@@ -15,6 +17,7 @@ class CountrySpeedCard extends StatelessWidget {
     required this.flagAsset,
     required this.speed,
     this.networkIconColor = Colors.black,
+    this.isGuest = false,
   });
 
   @override
@@ -52,10 +55,23 @@ class CountrySpeedCard extends StatelessWidget {
         child: SizedBox(
           height: 80,
           child: InkWell(
-            onTap: () {
-              controller.setCountry(countryName);
-              print("Country name $countryName");
-            },
+              onTap: () {
+                if (isGuest) {
+                  Get.defaultDialog(
+                    title: "Signup Required",
+                    middleText: "You need to sign up first to choose a server.",
+                    textConfirm: "Sign Up",
+                    textCancel: "Cancel",
+                    confirmTextColor: Colors.white,
+                    onConfirm: () {
+                      Get.back();
+                      Get.toNamed(AppRoutes.welcome);
+                    },
+                  );
+                } else {
+                  controller.setCountry(countryName);
+                }
+              },
             child: Center(
               child: ListTile(
                 leading: Container(

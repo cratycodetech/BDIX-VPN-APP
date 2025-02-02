@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-
 import '../../controllers/openvpn_controller.dart';
-import '../../routes/routes.dart';
+import '../../controllers/ping_controller.dart';
 import '../../service/device_service.dart';
 import '../../widgets/bottomNavigationBar_widget.dart';
+import '../../widgets/country_card_widgets.dart';
 import '../../widgets/disconnect_dialog_box.dart';
 import '../sign_up_screen/sign_up_screen1.dart';
 
@@ -33,6 +33,44 @@ class GuestServerScreenState extends State<GuestServerScreen> {
       _currentIndex = index; // Update the selected index
     });
   }
+
+  final PingController pingController = Get.put(PingController());
+
+
+
+  final List<Map<String, dynamic>> countries = [
+    {
+      'countryName': 'Singapore',
+      'flagAsset': 'assets/images/singapore_flag.png',
+      'speed': 'Loading...', // Default placeholder
+      'color': Colors.black,
+    },
+    {
+      'countryName': 'India',
+      'flagAsset': 'assets/images/india_flag.png',
+      'speed': 'Loading...',
+      'color': Colors.black,
+    },
+    {
+      'countryName': 'USA',
+      'flagAsset': 'assets/images/usa_flag.png',
+      'speed': 'Loading...',
+      'color': Colors.black,
+    },
+    {
+      'countryName': 'Finland',
+      'flagAsset': 'assets/images/finland_flag.png',
+      'speed': 'Loading...',
+      'color': Colors.black,
+    },
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    pingController.startPing();
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -151,83 +189,46 @@ class GuestServerScreenState extends State<GuestServerScreen> {
               ),
             ),
           ),
-          SizedBox(height: 8.h),
-          Card(
-            elevation: 2,
-            margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-            color: Theme.of(context).cardColor,
-            child: SizedBox(
-              height: 80.h,
-              child: Center(
-                child: ListTile(
-                  leading: Container(
-                    width: 40.w,
-                    height: 25.h,
-                    decoration: const BoxDecoration(
-                      image: DecorationImage(
-                        image: AssetImage('assets/images/french_flag.png'),
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                  ),
-                  title: const Text('France'),
-                  trailing: const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text('231ms', style: TextStyle(color: Colors.blue)),
-                      Padding(
-                        padding: EdgeInsets.symmetric(vertical: 8.0),
-                        child: VerticalDivider(
-                          width: 10,
-                          thickness: 1,
-                          color: Color(0xFF787473),
-                        ),
-                      ),
-                      Icon(Icons.arrow_drop_down, color: Colors.black),
-                    ],
-                  ),
-                ),
+          //SizedBox(height: 8.h),
+
+          Expanded(
+            child: Transform.translate(
+              offset: const Offset(0, -20), // Moves the ListView 20 pixels up
+              child: ListView.builder(
+                itemCount: countries.length,
+                itemBuilder: (context, index) {
+                  final country = countries[index];
+                  return Obx(() {
+                    String pingSpeed = '';
+
+                    switch (country['countryName']) {
+                      case 'USA':
+                        pingSpeed = pingController.usaPing.value;
+                        break;
+                      case 'India':
+                        pingSpeed = pingController.indiaPing.value;
+                        break;
+                      case 'Finland':
+                        pingSpeed = pingController.finlandPing.value;
+                        break;
+                      case 'Singapore':
+                        pingSpeed = pingController.singaporePing.value;
+                        break;
+                    }
+
+                    return CountrySpeedCard(
+                      countryName: country['countryName']!,
+                      flagAsset: country['flagAsset']!,
+                      speed: pingSpeed,
+                      networkIconColor: country['color']!,
+                      isGuest: true,
+                    );
+                  });
+                },
               ),
             ),
           ),
-          Card(
-            elevation: 2,
-            margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-            color: Theme.of(context).cardColor,
-            child: SizedBox(
-              height: 80.h,
-              child: Center(
-                child: ListTile(
-                  leading: Container(
-                    width: 40.w,
-                    height: 25.h,
-                    decoration: const BoxDecoration(
-                      image: DecorationImage(
-                        image: AssetImage('assets/images/french_flag.png'),
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                  ),
-                  title: const Text('Poland'),
-                  trailing: const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text('999ms', style: TextStyle(color: Colors.red)),
-                      Padding(
-                        padding: EdgeInsets.symmetric(vertical: 8.0),
-                        child: VerticalDivider(
-                          width: 10,
-                          thickness: 1,
-                          color: Color(0xFF787473),
-                        ),
-                      ),
-                      Icon(Icons.arrow_drop_down, color: Colors.black),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          )
+
         ],
       ),
       bottomNavigationBar: BottomNavBar(
