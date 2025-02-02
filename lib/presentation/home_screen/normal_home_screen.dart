@@ -9,6 +9,7 @@ import 'package:get/get.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../advertisment/reworded_ad.dart';
+import '../../controllers/country_controller.dart';
 import '../../models/user_preferences.dart';
 import '../../providers/timer_provider.dart';
 import '../../routes/routes.dart';
@@ -38,12 +39,19 @@ class _GuestHomeState extends ConsumerState<GuestHome> {
   DateTime? sessionStartTime;
   bool showMoreAd = false;
 
+  final List<String> countryNames = ['USA', 'India', 'UK'];
+  final Map<String, String> countryConfigFiles = {
+    'USA': 'assets/VPNFile/usa_server.ovpn',
+    'India': 'assets/VPNFile/indian_server.ovpn',
+    'Finland': 'assets/VPNFile/finland_server.ovpn',
+    'Singapore': 'assets/VPNFile/client1.ovpn',
+  };
+
 
 
   @override
   void initState() {
     super.initState();
-    _loadConfig();
     _observeConnection();
     _loadUserType();
     _conditionalStartVPN();
@@ -58,12 +66,6 @@ class _GuestHomeState extends ConsumerState<GuestHome> {
     super.dispose();
     isCurrentScreen = false;
   }
-
-
-
-
-
-
 
 
   Future<void> _loadRewardedAd() async {
@@ -102,12 +104,6 @@ class _GuestHomeState extends ConsumerState<GuestHome> {
     });
   }
 
-  Future<void> _loadConfig() async {
-    final loadedConfig =
-    await DefaultAssetBundle.of(context).loadString('assets/VPNFile/client1.ovpn');
-    vpnController.vpnConfig.value = loadedConfig;
-  }
-
   void _observeConnection() {
 
     vpnController.isConnected.listen((connected) async {
@@ -119,7 +115,6 @@ class _GuestHomeState extends ConsumerState<GuestHome> {
         ref.read(timerProvider.notifier).startTimer();
         sessionStartTime= DateTime.now();
         _saveSessionStartTime(sessionStartTime!);
-        print("ki obostha? $showMoreAd");
         if (isGuest && showMoreAd) {
           _showRewardedAd();
         }
@@ -148,14 +143,19 @@ class _GuestHomeState extends ConsumerState<GuestHome> {
     }
   }
 
+  final CountryController countryController = Get.put(CountryController());
+
   Future<void> _startVPN() async {
     try {
+      await countryController.loadConfigForCountry();
+      vpnController.vpnConfig.value = countryController.vpnConfig.value;
       vpnController.connect();
       print("VPN Connection Started...");
     } catch (e) {
       print("Error starting VPN: $e");
     }
   }
+
 
   void _stopVPN() {
     vpnController.disconnect();
@@ -164,6 +164,8 @@ class _GuestHomeState extends ConsumerState<GuestHome> {
   @override
   Widget build(BuildContext context) {
 
+
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: TopAppBar(isPremium: isPremium,isGuest: isGuest),
@@ -171,8 +173,6 @@ class _GuestHomeState extends ConsumerState<GuestHome> {
         return Column(
           children: [
             const SizedBox(height: 20),
-
-            // Map Image or Placeholder
             Container(
               width: double.infinity,
               height: 300,
@@ -199,7 +199,6 @@ class _GuestHomeState extends ConsumerState<GuestHome> {
 
             const Spacer(),
 
-            // Connect Button with Loading Indicator
             Center(
               child: Column(
                 children: [

@@ -9,11 +9,14 @@ import 'package:get/get.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'controllers/country_controller.dart';
 import 'controllers/openvpn_controller.dart';
+import 'controllers/ping_controller.dart';
 import 'routes/routes.dart';
 import 'package:workmanager/workmanager.dart';
 
 Future<void> main() async {
+
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
   MobileAds.instance.initialize();
@@ -45,7 +48,7 @@ Future<void> main() async {
   } else {
     initialRoute = AppRoutes.welcome;
   }
-
+  Get.put(CountryController());
   runApp(
     ProviderScope(
       child: MyApp(
@@ -54,6 +57,8 @@ Future<void> main() async {
       ),
     ),
   );
+
+
 }
 
 class MyApp extends StatefulWidget {

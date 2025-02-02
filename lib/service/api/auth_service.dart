@@ -186,4 +186,28 @@ class AuthService {
           errorResponse['message'] ?? 'You have used once please sign in');
     }
   }
+
+  Future<String?> getUserType() async {
+    final token = await _tokenService.getToken();
+    final url = Uri.parse('$baseUrl/api/v1/auth/current-user-type');
+    final response = await http.get(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode != 200) {
+      final errorResponse = jsonDecode(response.body);
+      throw Exception(
+          errorResponse['message'] ?? 'You are not a valid user');
+    }
+
+
+    final responseData = jsonDecode(response.body);
+    final String? userType = responseData['userType']?['userType'];
+
+    return userType;
+  }
 }

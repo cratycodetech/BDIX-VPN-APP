@@ -122,7 +122,7 @@ class _SignInScreenState extends State<SignInScreen> {
 
                           if (userType == "Premium") {
                             await _userService.storeUserType(userType!);
-                            print('User type: $userType');
+
                           }
 
                           Navigator.of(context).pop();

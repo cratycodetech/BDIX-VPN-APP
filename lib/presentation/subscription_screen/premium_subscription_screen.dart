@@ -1,3 +1,4 @@
+import 'package:bdix_vpn/service/api/auth_service.dart';
 import 'package:bdix_vpn/service/token_service.dart';
 import 'package:bdix_vpn/service/user_service.dart';
 import 'package:flutter/material.dart';
@@ -22,14 +23,12 @@ class PremiumSubscriptionScreen extends StatefulWidget {
       _PremiumSubscriptionScreenState();
 }
 
-
 class _PremiumSubscriptionScreenState extends State<PremiumSubscriptionScreen> {
   final UserService _userService = UserService();
   final TokenService _tokenService = TokenService();
   final UserRemoteService _userRemoteService = UserRemoteService();
+  final AuthService _authService = AuthService();
   String _currentPlan = 'Free Plan';
-
-
   @override
   void initState() {
     super.initState();
@@ -39,17 +38,17 @@ class _PremiumSubscriptionScreenState extends State<PremiumSubscriptionScreen> {
 
   Future<void> _loadCurrentSubscription() async {
     try {
-      String subscriptionType = await _userRemoteService.premiumUserSubscription();
+      String subscriptionType =
+          await _userRemoteService.premiumUserSubscription();
       setState(() {
-        _currentPlan = subscriptionType;  // Update the UI
+        _currentPlan = subscriptionType;
       });
     } catch (e) {
       setState(() {
-        _currentPlan = 'Free Plan';  // Fallback if error occurs
+        _currentPlan = 'Free Plan';
       });
     }
   }
-
 
   Future<void> _startPayment(String amount, String plan) async {
     try {
@@ -59,7 +58,7 @@ class _PremiumSubscriptionScreenState extends State<PremiumSubscriptionScreen> {
           multi_card_name: "visa,master,bkash",
           currency: SSLCurrencyType.BDT,
           product_category: "VPN Subscription",
-          sdkType: SSLCSdkType.TESTBOX, // Change to LIVE in production
+          sdkType: SSLCSdkType.TESTBOX,
           store_id: "testbox",
           store_passwd: "qwerty",
           total_amount: double.parse(amount),
@@ -111,12 +110,31 @@ class _PremiumSubscriptionScreenState extends State<PremiumSubscriptionScreen> {
       if (response.statusCode == 200) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text("Subscription activated for $plan!"),
-
         ));
-        showScaffoldMessage(context, "Login again to get premium package access");
+        try {
+          final userType = await _authService.getUserType();
+
+          if (userType != null) {
+            await _userService.storeUserType(userType);
+
+            setState(() {
+              _currentPlan = plan;
+            });
+
+            showScaffoldMessage(
+                context, "You are now a premium user! Enjoy unlimited access to the VPN.");
+          } else {
+            showScaffoldMessage(context, "Failed to retrieve user type.");
+          }
+        } catch (e) {
+          showScaffoldMessage(context, "An error occurred: $e");
+        }
+
+
       } else {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text("${response.statusCode} Failed to activate subscription: ${response.body}"),
+          content: Text(
+              "${response.statusCode} Failed to activate subscription: ${response.body}"),
         ));
       }
     } catch (e) {
@@ -280,8 +298,8 @@ class _PremiumSubscriptionScreenState extends State<PremiumSubscriptionScreen> {
                   borderRadius: BorderRadius.circular(26),
                 ),
               ),
-              onPressed: isCurrentPlan ? null : () =>
-                  _startPayment(amount, label),
+              onPressed:
+                  isCurrentPlan ? null : () => _startPayment(amount, label),
               child: Row(
                 children: [
                   Text(
@@ -291,8 +309,8 @@ class _PremiumSubscriptionScreenState extends State<PremiumSubscriptionScreen> {
                   const Spacer(),
                   Text(
                     price,
-                    style: const TextStyle(
-                        color: Color(0xFFFEFEFE), fontSize: 12),
+                    style:
+                        const TextStyle(color: Color(0xFFFEFEFE), fontSize: 12),
                   ),
                   const SizedBox(width: 8),
                 ],
@@ -300,10 +318,9 @@ class _PremiumSubscriptionScreenState extends State<PremiumSubscriptionScreen> {
             ),
           ),
 
-          // Show "Current Plan" if matched
           if (isCurrentPlan)
             Positioned(
-              left: 80, // Adjust this value to move it further left or right
+              left: 80,
               top: 13,
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),

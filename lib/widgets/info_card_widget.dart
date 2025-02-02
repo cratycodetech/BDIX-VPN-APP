@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:get/get_core/src/get_main.dart';
+
+import '../controllers/country_controller.dart';
 
 class InfoCard extends StatelessWidget {
   final String duration;
@@ -9,6 +13,8 @@ class InfoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final CountryController countryController = Get.find<CountryController>();
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       padding: const EdgeInsets.fromLTRB(36, 20, 36, 20),
@@ -27,11 +33,13 @@ class InfoCard extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _infoItem(
+          Obx(() => _infoItem(
             icon: Icons.language,
-            label: 'France',
+            label: countryController.selectedCountry.value.isNotEmpty
+                ? countryController.selectedCountry.value
+                : 'India',
             value: publicIP,
-          ),
+          )),
           _infoItem(
             icon: Icons.timer,
             label: 'Duration',

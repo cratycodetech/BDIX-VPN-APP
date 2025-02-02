@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import '../../controllers/ping_controller.dart';
 import '../../widgets/bottomNavigationBar_widget.dart';
 import '../../widgets/country_card_widgets.dart';
 
@@ -13,6 +15,47 @@ class _NormalServerScreenState extends State<NormalServerScreen> {
   int? _selectedValue = 0;
   late int _currentIndex = 1;
 
+  final PingController pingController = Get.put(PingController());
+
+
+
+  final List<Map<String, dynamic>> countries = [
+    {
+      'countryName': 'Singapore',
+      'flagAsset': 'assets/images/singapore_flag.png',
+      'speed': 'Loading...', // Default placeholder
+      'color': Colors.black,
+    },
+    {
+      'countryName': 'India',
+      'flagAsset': 'assets/images/india_flag.png',
+      'speed': 'Loading...',
+      'color': Colors.black,
+    },
+    {
+      'countryName': 'USA',
+      'flagAsset': 'assets/images/usa_flag.png',
+      'speed': 'Loading...',
+      'color': Colors.black,
+    },
+    {
+      'countryName': 'Finland',
+      'flagAsset': 'assets/images/finland_flag.png',
+      'speed': 'Loading...',
+      'color': Colors.black,
+    },
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    pingController.startPing();
+  }
+
+
+
+
+
   void _handleRadioValueChange(int? value) {
     setState(() {
       _selectedValue = value;
@@ -21,44 +64,12 @@ class _NormalServerScreenState extends State<NormalServerScreen> {
 
   void _onItemTapped(int index) {
     setState(() {
-      _currentIndex = index; // Update the selected index
+      _currentIndex = index;
     });
   }
 
 
-  final List<Map<String, dynamic>> countries = [
-    {
-      'countryName': 'France',
-      'flagAsset': 'assets/images/french_flag.png',
-      'speed': '231ms',
-      'color': Colors.black, // Now this is a valid Color assignment
-    },
-    {
-      'countryName': 'Germany',
-      'flagAsset': 'assets/images/french_flag.png',
-      'speed': '120ms',
-      'color': Colors.black, // Valid Color
-    },
-    {
-      'countryName': 'Germany',
-      'flagAsset': 'assets/images/french_flag.png',
-      'speed': '120ms',
-      'color': Colors.black, // Valid Color
-    },
-    {
-      'countryName': 'Germany',
-      'flagAsset': 'assets/images/french_flag.png',
-      'speed': '120ms',
-      'color': Colors.black, // Valid Color
-    },
-    {
-      'countryName': 'USA',
-      'flagAsset': 'assets/images/french_flag.png',
-      'speed': '98ms',
-      'color': Colors.green, // Valid Color
-    },
-    // Add more countries here as needed
-  ];
+
 
 
   @override
@@ -166,12 +177,32 @@ class _NormalServerScreenState extends State<NormalServerScreen> {
               itemCount: countries.length,
               itemBuilder: (context, index) {
                 final country = countries[index];
-                return CountrySpeedCard(
-                  countryName: country['countryName']!,
-                  flagAsset: country['flagAsset']!,
-                  speed: country['speed']!,
-                  networkIconColor: country['color']!,
-                );
+                return Obx(() {
+                  // Bind the ping value from the PingController
+                  String pingSpeed = '';
+
+                  switch (country['countryName']) {
+                    case 'USA':
+                      pingSpeed = pingController.usaPing.value;
+                      break;
+                    case 'India':
+                      pingSpeed = pingController.indiaPing.value;
+                      break;
+                    case 'Finland':
+                      pingSpeed = pingController.finlandPing.value;
+                      break;
+                    case 'Singapore':
+                      pingSpeed = pingController.singaporePing.value;
+                      break;
+                  }
+
+                  return CountrySpeedCard(
+                    countryName: country['countryName']!,
+                    flagAsset: country['flagAsset']!,
+                    speed: pingSpeed, // Update the speed with live ping data
+                    networkIconColor: country['color']!,
+                  );
+                });
               },
             ),
           ],
