@@ -28,9 +28,7 @@ class Speed {
     sessionStartBytesSent = castedTrafficStats['bytesSent'] ?? 0;
     sessionStartBytesReceived = castedTrafficStats['bytesReceived'] ?? 0;
 
-    _timer = Timer.periodic(const Duration(seconds: 1), (_) async {
-      await updateTrafficStats();
-    });
+
   }
 
   Future<int> stopMonitoring() async {
@@ -74,17 +72,14 @@ return sessionDataUsedBytes;
       uploadSpeedKB = formatSpeed(uploadSpeed);
       downloadSpeedKB = formatSpeed(downloadSpeed);
 
-      print("Upload Speed: $uploadSpeedKB");
-      print("Download Speed: $downloadSpeedKB");
+
 
     } on PlatformException catch (e) {
       print("Failed to get traffic stats: '${e.message}'");
     }
   }
 
-  String formatSpeed(int bytes) {
-    // Directly convert bytes to kilobytes (KB/s)
-    double kilobytes = bytes / 1;
+  String formatSpeed(int kilobytes) {
 
     if (kilobytes < 1024) {
       return "${kilobytes.toStringAsFixed(2)} KB/s";

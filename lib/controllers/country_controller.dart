@@ -34,7 +34,12 @@ class CountryController extends GetxController {
     if (vpnController.isConnected.value) {
       print("Disconnecting current VPN before switching...");
       await vpnController.disconnect();
-      await Future.delayed(const Duration(seconds: 1)); // Ensure disconnection
+      ever(vpnController.isConnected, (connected) async {
+        if (!connected) {
+          return;
+        }
+      });
+
     }
 
     print("Switching to new VPN server: ${selectedCountry.value}");

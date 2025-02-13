@@ -14,6 +14,7 @@ import '../../models/user_preferences.dart';
 import '../../providers/timer_provider.dart';
 import '../../routes/routes.dart';
 import '../../service/database/database_helper.dart';
+import '../../service/notification_service.dart';
 import '../../service/user_service.dart';
 import '../../widgets/bottomNavigationBar_widget.dart';
 import '../../widgets/topAppBar_widget.dart';
@@ -109,9 +110,9 @@ class _GuestHomeState extends ConsumerState<GuestHome> {
     vpnController.isConnected.listen((connected) async {
       print("connected status $connected");
       if (connected) {
-        ref.read(timerProvider.notifier).resetTimer();
+        //ref.read(timerProvider.notifier).resetTimer();
         await Future.delayed(const Duration(milliseconds: 300));
-        ref.read(timerProvider.notifier).resetTimer();
+        //ref.read(timerProvider.notifier).resetTimer();
         ref.read(timerProvider.notifier).startTimer();
         sessionStartTime= DateTime.now();
         _saveSessionStartTime(sessionStartTime!);
@@ -179,7 +180,7 @@ class _GuestHomeState extends ConsumerState<GuestHome> {
               decoration: const BoxDecoration(
                 image: DecorationImage(
                   image: AssetImage(
-                      'assets/images/normal_map.png'), // Replace with your map image asset
+                      'assets/images/normal_map.png'),
                   fit: BoxFit.contain,
                 ),
               ),

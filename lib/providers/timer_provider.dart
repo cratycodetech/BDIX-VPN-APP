@@ -132,7 +132,7 @@ class TimerNotifier extends StateNotifier<int> with WidgetsBindingObserver  {
     await Workmanager().registerPeriodicTask(
       countdownTaskName,
       countdownTaskName, // Simple task name, can be the same as the unique name
-      frequency: Duration(minutes: 15), // Check every 15 minutes
+      frequency: const Duration(minutes: 15), // Check every 15 minutes
       constraints: Constraints(
         networkType: NetworkType.connected,
       ),

@@ -18,7 +18,6 @@ void callbackDispatcher() {
           await prefs.setInt(prefKeyTimeRemaining, timeRemaining);
           print("Countdown task executed. Time remaining: $timeRemaining");
         } else {
-          // If the timer has reached 0, schedule the VPN disconnection task
           await Workmanager().registerOneOffTask(
             stopVpnTaskName,
             stopVpnTaskName,

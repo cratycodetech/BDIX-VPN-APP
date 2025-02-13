@@ -120,7 +120,7 @@ class _SignInScreenState extends State<SignInScreen> {
                             password: passwordController.text,
                           );
 
-                          if (userType == "Premium") {
+                          if (userType == "Premium" || userType == "Free") {
                             await _userService.storeUserType(userType!);
 
                           }

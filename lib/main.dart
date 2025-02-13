@@ -2,6 +2,8 @@ import 'dart:async';
 import 'package:bdix_vpn/presentation/connection_screen/connection_failed_screen.dart';
 import 'package:bdix_vpn/service/background/timer_background_service.dart';
 import 'package:bdix_vpn/service/connectivity_service.dart';
+import 'package:bdix_vpn/service/notification_service.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -11,13 +13,37 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'controllers/country_controller.dart';
 import 'controllers/openvpn_controller.dart';
-import 'controllers/ping_controller.dart';
 import 'routes/routes.dart';
 import 'package:workmanager/workmanager.dart';
+import 'package:firebase_core/firebase_core.dart';
+
+
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  await Firebase.initializeApp();
+  print("📩 Background Message Received: ${message.notification?.title}");
+}
 
 Future<void> main() async {
 
   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
+  FirebaseMessaging messaging = FirebaseMessaging.instance;
+
+  String? fcmtoken = await messaging.getToken();
+  if (fcmtoken != null) {
+    print("🔥 FCM Token: $fcmtoken");
+  } else {
+    print("❌ Failed to retrieve FCM token.");
+  }
+
+
+  NotificationService.initialize((String? payload) {
+    if (payload == "open_page") {
+      Get.offNamed(
+        AppRoutes.guestHome,
+      );
+    }
+  });
   await dotenv.load(fileName: ".env");
   MobileAds.instance.initialize();
 
@@ -49,6 +75,7 @@ Future<void> main() async {
     initialRoute = AppRoutes.welcome;
   }
   Get.put(CountryController());
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
   runApp(
     ProviderScope(
       child: MyApp(
@@ -74,6 +101,28 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
+
+  @override
+  void initState() {
+    super.initState();
+
+    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+      print("📩 Notification Clicked While App was in Background!");
+      print("Title: ${message.notification?.title}");
+      print("Body: ${message.notification?.body}");
+
+
+      if (message.data.containsKey('screen')) {
+        Get.toNamed(message.data['screen']);
+      } else {
+        Get.toNamed(AppRoutes.guestHome);
+      }
+    });
+
+    NotificationService().handleForegroundMessages();
+    NotificationService().checkInitialMessage();
+  }
+
   @override
   Widget build(BuildContext context) {
     return ScreenUtilInit(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../routes/routes.dart';
 import '../../service/database/database_helper.dart';
 import '../../widgets/bottomNavigationBar_widget.dart';
 import '../../widgets/info_card_widget.dart';
@@ -114,7 +115,7 @@ class ConnectionReportScreenState extends State<ConnectionReportScreen> {
                       IconButton(
                         icon: const Icon(Icons.arrow_back, color: Colors.black),
                         onPressed: () {
-                          Navigator.pop(context);
+                          Get.toNamed(AppRoutes.guestHome);
                         },
                       ),
                       const Text(

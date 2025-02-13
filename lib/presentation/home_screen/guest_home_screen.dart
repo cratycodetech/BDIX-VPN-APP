@@ -6,20 +6,21 @@ import 'package:get/get.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../advertisment/reworded_ad.dart';
+import '../../controllers/country_controller.dart';
 import '../../controllers/openvpn_controller.dart';
 import '../../routes/routes.dart';
 import '../../service/database/database_helper.dart';
 import '../../service/device_service.dart';
+import '../../service/notification_service.dart';
 import '../../service/user_service.dart';
 import '../../utils/scaffold_messenger_utils.dart';
 import '../../utils/speed_utils.dart';
+import '../../utils/vpn_utils.dart';
 import '../../widgets/bottomNavigationBar_widget.dart';
 import '../../widgets/rewarded_ad_dialog.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/timer_provider.dart';
 import '../../widgets/sign_up_dialog.dart';
-import 'dart:convert';
-import 'package:http/http.dart' as http;
 
 class GuestHomeScreen extends ConsumerStatefulWidget {
 
@@ -40,7 +41,7 @@ class _GuestHomeScreenState extends ConsumerState<GuestHomeScreen> {
   final DeviceService _deviceService = DeviceService();
   bool isNotPremium = false;
   bool isGuest = false;
-
+  String publicIP = "";
   DateTime? sessionStartTime;
   DateTime? sessionEndTime;
 
@@ -69,13 +70,7 @@ class _GuestHomeScreenState extends ConsumerState<GuestHomeScreen> {
 
     ref.read(timerProvider.notifier).resetTimer();
     try {
-      String publicIP = "Unknown";
-      final response =
-      await http.get(Uri.parse('https://api64.ipify.org?format=json'));
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        publicIP = data['ip'] ?? "Unknown";
-      }
+      String publicIP = await VpnUtils.getPublicIP();
       print('Disconnecting VPN...');
 
       // Access the OpenVPNController instance
@@ -145,7 +140,7 @@ class _GuestHomeScreenState extends ConsumerState<GuestHomeScreen> {
     _loadUserType();
     _initializeGuestStatus();
     _loadSessionStartTime();
-
+    _publicIP();
 
   }
 
@@ -154,6 +149,9 @@ class _GuestHomeScreenState extends ConsumerState<GuestHomeScreen> {
     _dialogTimer.cancel();
     _speed.startMonitoring();
     super.dispose();
+  }
+  Future<void> _publicIP() async {
+    publicIP = await VpnUtils.getPublicIP();
   }
 
   Future<void> _initializeGuestStatus() async {
@@ -203,6 +201,7 @@ class _GuestHomeScreenState extends ConsumerState<GuestHomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final CountryController countryController = Get.find<CountryController>();
 
     final remainingTime = Duration(seconds: ref.watch(timerProvider));
 
@@ -214,6 +213,7 @@ class _GuestHomeScreenState extends ConsumerState<GuestHomeScreen> {
       ref.listen<int>(timerProvider, (previous, next) {
         if (next <= 0) {
           _disconnectVPN();
+          // NotificationService.showSimpleNotification();
         }
       });
     }
@@ -273,11 +273,12 @@ class _GuestHomeScreenState extends ConsumerState<GuestHomeScreen> {
                     ),
                   ),
                   Transform.translate(
-                    offset: Offset(-100.w, -85.h),
-                    child: SvgPicture.asset(
-                      'assets/images/location_icon.svg',
-                      width: 14.w,
-                      height: 18.h,
+
+                    offset: VpnUtils.getCountryOffset(countryController.selectedCountry.value),
+                    child: Image.asset(
+                      VpnUtils.getCountryImage(countryController.selectedCountry.value),
+                      width: 19.w,
+                      height: 23.h,
                     ),
                   ),
                 ],
@@ -299,6 +300,24 @@ class _GuestHomeScreenState extends ConsumerState<GuestHomeScreen> {
                   ],
                 ),
               ),
+              publicIP != ""
+                  ? Transform.translate(
+                offset: Offset(0, -167.h),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'IP address : ',
+                      style: TextStyle(fontSize: 12.sp),
+                    ),
+                    Text(
+                      publicIP!,
+                      style: TextStyle(fontSize: 12.sp, color: const Color(0xFFD77704)),
+                    ),
+                  ],
+                ),
+              )
+                  : const SizedBox.shrink(),
               SizedBox(height: 16.h),
               Transform.translate(
                 offset: Offset(0, -170.h),

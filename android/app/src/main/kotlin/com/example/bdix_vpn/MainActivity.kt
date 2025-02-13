@@ -44,20 +44,21 @@ class MainActivity : FlutterActivity() {
         }
     }
 
-    private fun getTrafficStats(): Map<String, Int> {
-        val stats = mutableMapOf<String, Int>()
+    private fun getTrafficStats(): Map<String, Long> {
+        val stats = mutableMapOf<String, Long>()
 
         val bytesSent = TrafficStats.getTotalTxBytes()
         val bytesReceived = TrafficStats.getTotalRxBytes()
 
-        val kbSent = if (bytesSent < 0) 0 else (bytesSent / 1024).toInt()
-        val kbReceived = if (bytesReceived < 0) 0 else (bytesReceived / 1024).toInt()
+        val kbSent = if (bytesSent < 0) 0L else (bytesSent / 1024) // Use Long
+        val kbReceived = if (bytesReceived < 0) 0L else (bytesReceived / 1024) // Use Long
 
         stats["bytesSent"] = kbSent
         stats["bytesReceived"] = kbReceived
 
         return stats
     }
+
 
 
     private fun startMonitoringNetwork() {

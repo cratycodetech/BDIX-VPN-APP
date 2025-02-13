@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "355569403620",
+    "project_id": "fcmdem-bda98",
+    "storage_bucket": "fcmdem-bda98.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:355569403620:android:4ee0fb865ea59d8df24ef1",
+        "android_client_info": {
+          "package_name": "com.example.bdix_vpn"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAWoGmubd_zmQqI-PxmfIYJvcucUDcr8m8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:355569403620:android:53e91b86c9362719f24ef1",
+        "android_client_info": {
+          "package_name": "com.somadhan.fcmdemo"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAWoGmubd_zmQqI-PxmfIYJvcucUDcr8m8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

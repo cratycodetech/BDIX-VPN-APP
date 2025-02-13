@@ -8,6 +8,8 @@ import '../../routes/routes.dart';
 import '../../service/api/auth_service.dart';
 import '../../service/database/database_helper.dart';
 import '../../service/device_service.dart';
+import '../../service/notification_service.dart';
+import '../../utils/scaffold_messenger_utils.dart';
 import '../../widgets/bottomNavigationBar_widget.dart';
 import '../../widgets/disconnect_dialog_box.dart';
 import '../sign_in_screen/sign_in_screen.dart';
@@ -40,7 +42,19 @@ class _PremiumSettingScreenState extends State<PremiumSettingScreen> {
     });
   }
 
-  void _toggleSwitch(int switchType, bool value) {
+  void _toggleSwitch(int switchType, bool value) async {
+    if (switchType == 2 && value) {
+      // If user is enabling notifications, request permission
+      bool isGranted = await NotificationService.requestPermissions();
+
+      if (!isGranted) {
+        // If permission is denied, do not update the state
+        showScaffoldMessage(context, "Notification permission is required to enable this feature.");
+        return;
+      }
+    }
+
+    // Proceed to update the state
     setState(() {
       switch (switchType) {
         case 0:
@@ -57,11 +71,13 @@ class _PremiumSettingScreenState extends State<PremiumSettingScreen> {
     });
   }
 
+
   void _savePreferences() async {
     final userId = await _userService.getUserId();
     if (userId == null) {
       throw Exception("User ID cannot be null");
     }
+
     UserPreferences preferences = UserPreferences(
       userID: userId,
       openVPN: _selectedValue == 1,
@@ -73,9 +89,12 @@ class _PremiumSettingScreenState extends State<PremiumSettingScreen> {
     );
     UserPreferences? existingPreferences =
         await DatabaseHelper().getUserPreferences(userId);
+
     if (existingPreferences != null) {
       await DatabaseHelper().updateUserPreferences(preferences);
+      debugPrint("Updating existing user preferences for user ID: $userId");
     } else {
+      debugPrint("Inserting new user preferences for user ID: $userId");
       await DatabaseHelper().insertUserPreferences(preferences);
     }
   }
@@ -183,6 +202,7 @@ class _PremiumSettingScreenState extends State<PremiumSettingScreen> {
     super.initState();
     _loadPreferences();
     _checkGuestStatus();
+
   }
 
   void _checkGuestStatus() async {

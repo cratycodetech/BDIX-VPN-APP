@@ -15,7 +15,6 @@ import '../presentation/home_screen/normal_home_screen.dart';
 import '../presentation/one_time_splash_screen/one_time_splash_screen.dart';
 import '../presentation/server_screen/guest_server_screen.dart';
 import '../presentation/server_screen/normal_server_screen.dart';
-import '../presentation/setting_screen/normal_setting_screen.dart';
 import '../presentation/setting_screen/premium_setting_screen.dart';
 import '../presentation/sign_in_screen/sign_in_screen.dart';
 import '../presentation/sign_up_screen/signUp_otp_screen.dart';
@@ -88,7 +87,7 @@ class AppRoutes {
     GetPage(
         name: normalConnectedScreen, page: () => const ConnectedDeviceScreen()),
     GetPage(name: guestSettingScreen, page: () => const GuestSettingScreen()),
-    GetPage(name: normalSettingScreen, page: () => const NormalSettingScreen()),
+    //GetPage(name: normalSettingScreen, page: () => const NormalSettingScreen()),
     GetPage(
         name: premiumSettingScreen, page: () => const PremiumSettingScreen()),
     GetPage(
