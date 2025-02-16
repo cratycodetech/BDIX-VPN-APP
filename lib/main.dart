@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:bdix_vpn/presentation/connection_screen/connection_failed_screen.dart';
+import 'package:bdix_vpn/service/api/user_remote_service.dart';
 import 'package:bdix_vpn/service/background/timer_background_service.dart';
 import 'package:bdix_vpn/service/connectivity_service.dart';
 import 'package:bdix_vpn/service/notification_service.dart';
@@ -29,9 +30,9 @@ Future<void> main() async {
   await Firebase.initializeApp();
   FirebaseMessaging messaging = FirebaseMessaging.instance;
 
-  String? fcmtoken = await messaging.getToken();
-  if (fcmtoken != null) {
-    print("🔥 FCM Token: $fcmtoken");
+  String? fcmToken = await messaging.getToken();
+  if (fcmToken != null) {
+    print("🔥 FCM Token: $fcmToken");
   } else {
     print("❌ Failed to retrieve FCM token.");
   }
@@ -65,6 +66,20 @@ Future<void> main() async {
   final token = prefs.getString('accessToken');
 
   final deviceId = prefs.getString('guest_device_id');
+
+  if (token != null) {
+    String? fcmToken = await messaging.getToken();
+    if (fcmToken != null) {
+      try {
+        await UserRemoteService().updateFcmToken(fcmToken: fcmToken);
+        print("✅ FCM Token updated successfully.");
+      } catch (e) {
+        print("❌ Failed to update `FCM` token: $e");
+      }
+    } else {
+      print("❌ Failed to retrieve FCM token.");
+    }
+  }
 
   String initialRoute;
   if (isFirstLaunch) {

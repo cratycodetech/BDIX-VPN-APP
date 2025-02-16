@@ -28,10 +28,8 @@ class UserService {
     final userType = await getUserType();
     if (userType == true) {
       final prefs = await SharedPreferences.getInstance();
-      print("ki obostha 1");
       return prefs.getString('guest_device_id');
     } else {
-      print("ki obostha ");
       return await TokenService().decodeUserId();
     }
   }

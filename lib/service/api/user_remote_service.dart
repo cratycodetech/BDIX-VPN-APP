@@ -115,4 +115,36 @@ class UserRemoteService {
       String subscriptionType = data['subscriptionType'];
       return subscriptionType;
   }
+
+
+
+  Future<void> updateFcmToken({required String fcmToken}) async {
+    try {
+      final token = await _tokenService.getToken();
+      final userId = await _tokenService.decodeUserId();
+      if (token == null) {
+        throw Exception('No token found');
+      }
+
+      final url = Uri.parse('$baseUrl/api/v1/user/update-profile/$userId');
+      final response = await http.put(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'fcmToken': fcmToken,
+        }),
+      );
+
+      if (response.statusCode != 200) {
+        final errorResponse = jsonDecode(response.body);
+        throw Exception(errorResponse['message'] ?? 'Update failed');
+      }
+    } catch (e) {
+      // Log or handle the error appropriately
+      throw Exception('Failed to update fcmToken: ${e.toString()}');
+    }
+  }
 }
